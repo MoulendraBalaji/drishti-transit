@@ -163,7 +163,12 @@ jobs:
         shell: bash
         run: |
           VERSION="${{ inputs.version }}"
-          if [ -z "$VERSION" ]; then VERSION="${GITHUB_REF#refs/tags/}"; fi
+          if [ -z "$VERSION" ]; then
+            case "$GITHUB_REF" in
+              refs/tags/*) VERSION="${GITHUB_REF#refs/tags/}" ;;
+              *) VERSION="" ;;
+            esac
+          fi
           if [ -z "$VERSION" ]; then VERSION="build-$(date +%Y%m%d-%H%M%S)"; fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
