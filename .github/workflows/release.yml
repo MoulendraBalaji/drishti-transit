@@ -3,14 +3,16 @@ name: Publish Release
 # Builds the Android APK and iOS IPA and publishes them to a GitHub Release.
 #
 # Triggers:
-#   - pushing a tag like `v1.0.0`  ->  creates a draft release for that tag
+#   - pushing a tag like `v1.0.0`  ->  publishes a release for that tag
 #   - manual run (Actions > Publish Release > Run workflow)
 #
 # Optional signed iOS/IPA:
 #   Add the repo secrets CERTIFICATE_BASE64, CERTIFICATE_PASSWORD,
 #   IOS_DISTRIBUTION_PROFILE_BASE64 and set SIGN_IOS == 'true'. Without them
-#   the workflow exports an unsigned IPA (--no-codesign), which is fine for
-#   test-flight/demo artifacts but not for App Store distribution.
+#   the workflow packages the unsigned Runner.app bundle built by Flutter's
+#   --no-codesign (which no longer exports an IPA itself) into an unsigned
+#   IPA. Unsigned IPAs are fine for test-flight/demo sideloading but not for
+#   App Store distribution.
 
 on:
   push:
@@ -35,7 +37,7 @@ jobs:
     name: Analyze + Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: subosito/flutter-action@v2
         with:
@@ -56,7 +58,7 @@ jobs:
     needs: library-check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: subosito/flutter-action@v2
         with:
@@ -70,7 +72,7 @@ jobs:
         run: flutter build apk --release
 
       - name: Upload Android artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: android-apk
           path: |
@@ -85,7 +87,7 @@ jobs:
     env:
       SIGN_IOS: ${{ secrets.SIGN_IOS }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: subosito/flutter-action@v2
         with:
@@ -116,10 +118,28 @@ jobs:
 
       - name: Build IPA (unsigned)
         if: env.SIGN_IOS != 'true'
-        run: flutter build ipa --no-codesign
+        run: |
+          flutter build ipa --no-codesign
+          # Newer Flutter versions stop before exporting an IPA when codesigning
+          # is disabled; they leave a Runner.xcarchive. Package the signed-out
+          # app bundle into a valid IPA (Payload/<App>.app) so the release
+          # always carries an iOS artifact.
+          if ! compgen -G "build/ios/ipa/*.ipa" > /dev/null; then
+            APP=build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app
+            if [ ! -d "$APP" ]; then
+              echo "::error::Runner.app not found in the archive ($APP)"
+              exit 1
+            fi
+            rm -rf Payload && mkdir -p Payload
+            cp -R "$APP" Payload/
+            mkdir -p build/ios/ipa
+            ditto -c -k --sequesterRsrc --keepParent Payload build/ios/ipa/Runner.ipa
+            rm -rf Payload
+          fi
+          ls -la build/ios/ipa
 
       - name: Upload iOS artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ios-ipa
           path: build/ios/ipa/*.ipa
@@ -130,10 +150,10 @@ jobs:
     needs: [android, ios]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: release-assets
           merge-multiple: true
@@ -157,7 +177,7 @@ jobs:
 
             - Android: `Drishti Transit` release APK (`app-release.apk`)
             - iOS: archive export (`*.ipa`)
-          draft: true
+          draft: false
           generate_release_notes: true
           files: |
             release-assets/*.apk
