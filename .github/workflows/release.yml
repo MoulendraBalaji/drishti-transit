@@ -82,6 +82,8 @@ jobs:
     name: Build iOS IPA
     needs: library-check
     runs-on: macos-14
+    env:
+      SIGN_IOS: ${{ secrets.SIGN_IOS }}
     steps:
       - uses: actions/checkout@v4
 
@@ -94,7 +96,7 @@ jobs:
         run: flutter pub get
 
       - name: Set up iOS signing keys
-        if: ${{ secrets.SIGN_IOS == 'true' }}
+        if: env.SIGN_IOS == 'true'
         run: |
           mkdir -p ~/ios-certs
           echo "${{ secrets.CERTIFICATE_BASE64 }}" | base64 --decode > ~/ios-certs/cert.p12
@@ -109,11 +111,11 @@ jobs:
             ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Build IPA (signed)
-        if: ${{ secrets.SIGN_IOS == 'true' }}
+        if: env.SIGN_IOS == 'true'
         run: flutter build ipa --release
 
       - name: Build IPA (unsigned)
-        if: ${{ secrets.SIGN_IOS != 'true' }}
+        if: env.SIGN_IOS != 'true'
         run: flutter build ipa --no-codesign
 
       - name: Upload iOS artifact
