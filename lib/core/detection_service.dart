@@ -103,7 +103,7 @@ class DetectionService {
     final now = DateTime.now();
     for (var i = 0; i < 34; i++) {
       final minutesAgo = Rand(now.millisecondsSinceEpoch + i)
-          .intRange(3, 38 + i % 12);
+          .intRange(0, 13);
       final c = corridors[i % corridors.length];
       final geo = c.geo;
       final seg = i % (geo.length - 1);
@@ -120,7 +120,7 @@ class DetectionService {
         lng: lng + _rand.range(-0.0008, 0.0008),
         ts: now.subtract(Duration(minutes: minutesAgo, seconds: _rand.intRange(0, 59))),
         busId: SimWorld.busIds[_rand.intRange(0, SimWorld.busIds.length)],
-        busRoute: c.name,
+        busRoute: '${c.id} · ${c.name}',
         corridorId: c.id,
         sceneSeed: i * 4243 + 7,
         sceneTime: _rand.range(2, 14),

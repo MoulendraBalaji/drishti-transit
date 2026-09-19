@@ -281,7 +281,7 @@ class _FactsPanel extends StatelessWidget {
   }
 
   static String _day(DateTime t) =>
-      '${t.day.toString().padLeft(2, '0')} ${_months[t.month - 1]} 2026';
+      '${t.day.toString().padLeft(2, '0')} ${_months[t.month - 1]} ${t.year}';
 
   static const _months = [
     'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
