@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -42,6 +43,14 @@ class _DrishtiAppState extends State<DrishtiApp> {
             themeMode: themeMode,
             themeAnimationDuration: const Duration(milliseconds: 300),
             themeAnimationCurve: Curves.easeInOutCubic,
+            scrollBehavior: const MaterialScrollBehavior().copyWith(
+              dragDevices: {
+                PointerDeviceKind.mouse,
+                PointerDeviceKind.touch,
+                PointerDeviceKind.stylus,
+                PointerDeviceKind.trackpad,
+              },
+            ),
             routerConfig: _router,
             builder: (context, child) {
               final isDark = Theme.of(context).brightness == Brightness.dark;

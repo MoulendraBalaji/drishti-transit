@@ -42,7 +42,7 @@ class Dp {
   static const Color _inkDark = Color(0xFFF0F6FC);
   static const Color _inkSoftDark = Color(0xFFC9D1D9);
   static const Color _textMutedDark = Color(0xFF8B949E);
-  static const Color _textFaintDark = Color(0xFF484F58);
+  static const Color _textFaintDark = Color(0xFF7D8590);
 
   // Dynamic Theme-Aware Getters
   static Color get canvas => isDark ? _canvasDark : _canvasLight;

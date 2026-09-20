@@ -80,16 +80,30 @@ class _AppShellState extends State<AppShell>
 
   Widget _buildAdminDashboard(BuildContext context, int idx) {
     final cc = context.watch<CommandCenter>();
+    final isDark = Dp.isDark;
+
     return Row(
       children: [
-        // Left Sidebar (Mobbin Admin Dashboard Navigation)
+        // Left Sidebar (Mobbin Admin Dashboard Navigation with high contrast in dark mode)
         Container(
           width: 260,
           decoration: BoxDecoration(
-            color: Dp.canvas,
+            color: isDark ? const Color(0xFF161B22) : const Color(0xFFFFFFFF),
             border: Border(
-              right: BorderSide(color: Dp.hairline, width: 1.0),
+              right: BorderSide(
+                color: isDark ? const Color(0xFF30363D) : Dp.hairline,
+                width: 1.2,
+              ),
             ),
+            boxShadow: isDark
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      blurRadius: 16,
+                      offset: const Offset(2, 0),
+                    ),
+                  ]
+                : null,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,10 +123,13 @@ class _AppShellState extends State<AppShell>
                         clipBehavior: Clip.antiAlias,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Dp.hairline, width: 1.2),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF38444D) : Dp.hairline,
+                            width: 1.2,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
+                              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.1),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -136,6 +153,7 @@ class _AppShellState extends State<AppShell>
                           style: AppText.displaySmall(size: 16).copyWith(
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.5,
+                            color: isDark ? const Color(0xFFF0F6FC) : Dp.ink,
                           ),
                         ),
                         Text(
@@ -151,14 +169,17 @@ class _AppShellState extends State<AppShell>
                   ],
                 ),
               ),
-              HairDivider(color: Dp.hairline, thickness: double.infinity),
+              HairDivider(
+                color: isDark ? const Color(0xFF30363D) : Dp.hairline,
+                thickness: double.infinity,
+              ),
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   'NAVIGATION',
                   style: AppText.dataTiny.copyWith(
-                    color: Dp.textFaint,
+                    color: isDark ? const Color(0xFF8B949E) : Dp.textMuted,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.2,
                   ),
@@ -183,15 +204,44 @@ class _AppShellState extends State<AppShell>
                 active: idx == 2,
                 onTap: () => _select(2),
               ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'PREFERENCES',
+                  style: AppText.dataTiny.copyWith(
+                    color: isDark ? const Color(0xFF8B949E) : Dp.textMuted,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              _SidebarNavButton(
+                icon: DGlyph.settings,
+                label: 'System Settings',
+                active: false,
+                onTap: () => context.push('/settings'),
+              ),
               const Spacer(),
               // Telemetry status panel in sidebar
               Container(
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Dp.canvasSoft,
+                  color: isDark ? const Color(0xFF1C2128) : Dp.canvasSoft,
                   borderRadius: BorderRadius.circular(Dp.rSm),
-                  border: Border.all(color: Dp.hairline),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF38444D) : Dp.hairline,
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,7 +260,7 @@ class _AppShellState extends State<AppShell>
                         Text(
                           'FLEET TELEMETRY',
                           style: AppText.dataTiny.copyWith(
-                            color: Dp.ink,
+                            color: isDark ? const Color(0xFFF0F6FC) : Dp.ink,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.8,
                           ),
@@ -221,14 +271,16 @@ class _AppShellState extends State<AppShell>
                     Text(
                       '${cc.busesOnline} Bus Nodes Online',
                       style: AppText.bodySmall.copyWith(
-                        color: Dp.ink,
+                        color: isDark ? Colors.white : Dp.ink,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${cc.total} Detections Logged',
-                      style: AppText.dataTiny.copyWith(color: Dp.textMuted),
+                      style: AppText.dataTiny.copyWith(
+                        color: isDark ? const Color(0xFF8B949E) : Dp.textMuted,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     const LivePill(dense: true, label: 'SYSTEM ACTIVE'),
@@ -247,9 +299,12 @@ class _AppShellState extends State<AppShell>
                 height: 60,
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 decoration: BoxDecoration(
-                  color: Dp.canvas,
+                  color: isDark ? const Color(0xFF161B22) : Dp.canvas,
                   border: Border(
-                    bottom: BorderSide(color: Dp.hairline, width: 1.0),
+                    bottom: BorderSide(
+                      color: isDark ? const Color(0xFF30363D) : Dp.hairline,
+                      width: 1.2,
+                    ),
                   ),
                 ),
                 child: Row(
@@ -259,6 +314,7 @@ class _AppShellState extends State<AppShell>
                       style: AppText.displaySmall(size: 16).copyWith(
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.2,
+                        color: isDark ? const Color(0xFFF0F6FC) : Dp.ink,
                       ),
                     ),
                     const SizedBox(width: 24),
@@ -267,18 +323,24 @@ class _AppShellState extends State<AppShell>
                       width: 280,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                       decoration: BoxDecoration(
-                        color: Dp.field,
+                        color: isDark ? const Color(0xFF0D1117) : Dp.field,
                         borderRadius: BorderRadius.circular(Dp.rFull),
-                        border: Border.all(color: Dp.hairlineSoft),
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF30363D) : Dp.hairlineSoft,
+                        ),
                       ),
                       child: Row(
                         children: [
-                          Drishti.icon(DGlyph.target, size: 14, color: Dp.textMuted),
+                          Drishti.icon(
+                            DGlyph.target,
+                            size: 14,
+                            color: isDark ? const Color(0xFF8B949E) : Dp.textMuted,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Search Pune corridors, stops…',
                             style: AppText.bodySmall.copyWith(
-                              color: Dp.textMuted,
+                              color: isDark ? const Color(0xFF8B949E) : Dp.textMuted,
                               fontSize: 12,
                             ),
                           ),
@@ -289,9 +351,11 @@ class _AppShellState extends State<AppShell>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Dp.canvasSoft,
+                        color: isDark ? const Color(0xFF21262D) : Dp.canvasSoft,
                         borderRadius: BorderRadius.circular(Dp.rFull),
-                        border: Border.all(color: Dp.hairline),
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF38444D) : Dp.hairline,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -307,7 +371,12 @@ class _AppShellState extends State<AppShell>
                           const SizedBox(width: 6),
                           Text(
                             'MAPS API LINKED',
-                            style: monoTxt(9, color: Dp.ink, w: FontWeight.w700, ls: 0.5),
+                            style: monoTxt(
+                              9,
+                              color: isDark ? const Color(0xFFF0F6FC) : Dp.ink,
+                              w: FontWeight.w700,
+                              ls: 0.5,
+                            ),
                           ),
                         ],
                       ),
@@ -323,9 +392,11 @@ class _AppShellState extends State<AppShell>
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Dp.canvasSoft,
+                          color: isDark ? const Color(0xFF21262D) : Dp.canvasSoft,
                           borderRadius: BorderRadius.circular(Dp.rFull),
-                          border: Border.all(color: Dp.hairline),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF38444D) : Dp.hairline,
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -333,12 +404,17 @@ class _AppShellState extends State<AppShell>
                             Drishti.icon(
                               DGlyph.settings,
                               size: 13,
-                              color: Dp.ink,
+                              color: isDark ? const Color(0xFFF0F6FC) : Dp.ink,
                             ),
                             const SizedBox(width: 6),
                             Text(
                               'SETTINGS',
-                              style: monoTxt(9, color: Dp.ink, w: FontWeight.w700, ls: 0.8),
+                              style: monoTxt(
+                                9,
+                                color: isDark ? const Color(0xFFF0F6FC) : Dp.ink,
+                                w: FontWeight.w700,
+                                ls: 0.8,
+                              ),
                             ),
                           ],
                         ),
@@ -371,7 +447,7 @@ class _AppShellState extends State<AppShell>
   }
 }
 
-class _SidebarNavButton extends StatelessWidget {
+class _SidebarNavButton extends StatefulWidget {
   const _SidebarNavButton({
     required this.icon,
     required this.label,
@@ -385,54 +461,107 @@ class _SidebarNavButton extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_SidebarNavButton> createState() => _SidebarNavButtonState();
+}
+
+class _SidebarNavButtonState extends State<_SidebarNavButton> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Dp.isDark;
+    final bool active = widget.active;
+
+    final Color bg;
+    final Color fg;
+    final Color border;
+    final List<BoxShadow>? shadows;
+
+    if (active) {
+      bg = Dp.accent; // Electric blue #0066FF
+      fg = Colors.white;
+      border = isDark ? const Color(0xFF3385FF) : const Color(0xFF0052CC);
+      shadows = [
+        BoxShadow(
+          color: const Color(0xFF0066FF).withValues(alpha: isDark ? 0.40 : 0.25),
+          blurRadius: 10,
+          offset: const Offset(0, 3),
+        ),
+      ];
+    } else {
+      if (_hovered) {
+        bg = isDark ? const Color(0xFF262C36) : const Color(0xFFF2F4F7);
+        fg = isDark ? Colors.white : Dp.ink;
+        border = isDark ? const Color(0xFF38444D) : Dp.hairline;
+        shadows = null;
+      } else {
+        bg = isDark ? const Color(0xFF1C2128) : Colors.transparent;
+        fg = isDark ? const Color(0xFFE6EDF3) : Dp.ink;
+        border = isDark ? const Color(0xFF2D333B) : Colors.transparent;
+        shadows = null;
+      }
+    }
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3.5),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            onTap();
-          },
-          borderRadius: BorderRadius.circular(Dp.rFull),
-          child: AnimatedContainer(
-            duration: Mo.fast,
-            curve: Mo.easeOutTech,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: active ? Dp.primary : Colors.transparent,
-              borderRadius: BorderRadius.circular(Dp.rFull),
-            ),
-            child: Row(
-              children: [
-                Drishti.icon(
-                  icon,
-                  size: 16,
-                  color: active ? Colors.white : Dp.ink,
-                  stroke: active ? 2.0 : 1.6,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  label,
-                  style: AppText.label.copyWith(
-                    color: active ? Colors.white : Dp.ink,
-                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                    fontSize: 13,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              widget.onTap();
+            },
+            borderRadius: BorderRadius.circular(Dp.rFull),
+            child: AnimatedContainer(
+              duration: Mo.fast,
+              curve: Mo.easeOutTech,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(Dp.rFull),
+                border: Border.all(color: border, width: 1.2),
+                boxShadow: shadows,
+              ),
+              child: Row(
+                children: [
+                  Drishti.icon(
+                    widget.icon,
+                    size: 16,
+                    color: fg,
+                    stroke: active ? 2.2 : 1.8,
                   ),
-                ),
-                if (active) ...[
-                  const Spacer(),
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: Dp.accent,
-                      shape: BoxShape.circle,
+                  const SizedBox(width: 12),
+                  Text(
+                    widget.label,
+                    style: AppText.label.copyWith(
+                      color: fg,
+                      fontWeight: active ? FontWeight.w700 : FontWeight.w600,
+                      fontSize: 13,
                     ),
                   ),
+                  if (active) ...[
+                    const Spacer(),
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

@@ -29,7 +29,14 @@ class CommandScreen extends StatefulWidget {
 
 class _CommandScreenState extends State<CommandScreen> {
   final MapController _map = MapController();
+  final DraggableScrollableController _sheetController = DraggableScrollableController();
   String? _lastAlertId;
+
+  @override
+  void dispose() {
+    _sheetController.dispose();
+    super.dispose();
+  }
 
   void _onAlertChanged(CommandCenter cc) {
     final id = cc.latest?.id;
@@ -50,14 +57,16 @@ class _CommandScreenState extends State<CommandScreen> {
           _mapView(cc),
           Positioned.fill(
             child: DraggableScrollableSheet(
-              initialChildSize: Tok.feedSnapMin,
-              minChildSize: 0.12,
-              maxChildSize: Tok.feedSnapMax,
+              controller: _sheetController,
+              initialChildSize: 0.18,
+              minChildSize: 0.10,
+              maxChildSize: 0.85,
               snap: true,
-              snapSizes: const [0.16, 0.42, 0.65],
+              snapSizes: const [0.18, 0.45, 0.80],
               builder: (context, scroll) => _FeedSheet(
                 cc: cc,
                 scroll: scroll,
+                controller: _sheetController,
                 onSelect: (e) => _openDetail(e),
               ),
             ),
@@ -520,11 +529,13 @@ class _FeedSheet extends StatelessWidget {
   const _FeedSheet({
     required this.cc,
     required this.scroll,
+    required this.controller,
     required this.onSelect,
   });
 
   final CommandCenter cc;
   final ScrollController scroll;
+  final DraggableScrollableController controller;
   final ValueChanged<DetectionEvent> onSelect;
 
   @override
@@ -538,9 +549,9 @@ class _FeedSheet extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Color(0x14000000),
+            color: const Color(0x14000000),
             blurRadius: 20,
-            offset: Offset(0, -4),
+            offset: const Offset(0, -4),
           ),
         ],
       ),
@@ -550,8 +561,8 @@ class _FeedSheet extends StatelessWidget {
           controller: scroll,
           padding: EdgeInsets.zero,
           children: [
-            _SheetHandle(),
-            _SheetHeader(cc),
+            _SheetHandle(controller: controller),
+            _SheetHeader(cc: cc, controller: controller),
             HairDivider(color: Dp.hairline, thickness: double.infinity),
             const SizedBox(height: 4),
             for (var i = 0; i < cc.incidents.length; i++)
@@ -570,18 +581,59 @@ class _FeedSheet extends StatelessWidget {
   }
 }
 
-class _SheetHandle extends StatelessWidget {
+class _SheetHandle extends StatefulWidget {
+  const _SheetHandle({required this.controller});
+  final DraggableScrollableController controller;
+
+  @override
+  State<_SheetHandle> createState() => _SheetHandleState();
+}
+
+class _SheetHandleState extends State<_SheetHandle> {
+  bool _hovered = false;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 24,
-      alignment: Alignment.center,
-      child: Container(
-        width: 36,
-        height: 4,
-        decoration: BoxDecoration(
-          color: Dp.hairline,
-          borderRadius: BorderRadius.circular(2),
+    final isDark = Dp.isDark;
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeUpDown,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragUpdate: (details) {
+          if (!widget.controller.isAttached) return;
+          final screenH = MediaQuery.sizeOf(context).height;
+          if (screenH <= 0) return;
+          final delta = -details.primaryDelta! / screenH;
+          final current = widget.controller.size;
+          final next = (current + delta).clamp(0.10, 0.85);
+          widget.controller.jumpTo(next);
+        },
+        child: Container(
+          height: 28,
+          alignment: Alignment.center,
+          color: Colors.transparent,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: _hovered ? 68 : 48,
+            height: 5,
+            decoration: BoxDecoration(
+              color: _hovered
+                  ? Dp.accent
+                  : (isDark ? const Color(0xFF48515D) : const Color(0xFFD0D5DD)),
+              borderRadius: BorderRadius.circular(Dp.rFull),
+              boxShadow: _hovered
+                  ? [
+                      BoxShadow(
+                        color: Dp.accent.withValues(alpha: 0.5),
+                        blurRadius: 8,
+                        offset: const Offset(0, 1),
+                      ),
+                    ]
+                  : null,
+            ),
+          ),
         ),
       ),
     );
@@ -589,53 +641,132 @@ class _SheetHandle extends StatelessWidget {
 }
 
 class _SheetHeader extends StatelessWidget {
-  const _SheetHeader(this.cc);
+  const _SheetHeader({required this.cc, required this.controller});
   final CommandCenter cc;
+  final DraggableScrollableController controller;
+
+  void _snap(double target) {
+    if (!controller.isAttached) return;
+    HapticFeedback.selectionClick();
+    controller.animateTo(
+      target,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final latest = cc.latest;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 4, 18, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Drishti.icon(DGlyph.feed, size: 15, color: Dp.ink),
-              const SizedBox(width: 8),
-              Text(
-                'OPS FEED',
-                style: TextStyle(
-                  fontFamily: AppText.mono,
-                  fontSize: 11,
-                  letterSpacing: 1.2,
-                  color: Dp.ink,
-                  fontWeight: FontWeight.w700,
+    final isDark = Dp.isDark;
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onVerticalDragUpdate: (details) {
+        if (!controller.isAttached) return;
+        final screenH = MediaQuery.sizeOf(context).height;
+        if (screenH <= 0) return;
+        final delta = -details.primaryDelta! / screenH;
+        final current = controller.size;
+        final next = (current + delta).clamp(0.10, 0.85);
+        controller.jumpTo(next);
+      },
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 2, 18, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Drishti.icon(DGlyph.feed, size: 15, color: Dp.ink),
+                const SizedBox(width: 8),
+                Text(
+                  'OPS FEED',
+                  style: TextStyle(
+                    fontFamily: AppText.mono,
+                    fontSize: 11,
+                    letterSpacing: 1.2,
+                    color: Dp.ink,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              const LivePill(dense: true, label: 'STREAMING'),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Dp.canvasSoft,
-                  borderRadius: BorderRadius.circular(Dp.rFull),
-                  border: Border.all(color: Dp.hairline),
+                const SizedBox(width: 10),
+                // Quick resize snap buttons
+                _ResizePill(
+                  label: 'MIN',
+                  onTap: () => _snap(0.18),
                 ),
-                child: Text(
-                  '${cc.total}',
-                  style: AppText.dataStrong.copyWith(color: Dp.ink, fontSize: 11),
+                const SizedBox(width: 4),
+                _ResizePill(
+                  label: 'MID',
+                  onTap: () => _snap(0.45),
                 ),
-              ),
+                const SizedBox(width: 4),
+                _ResizePill(
+                  label: 'MAX',
+                  onTap: () => _snap(0.80),
+                ),
+                const Spacer(),
+                const LivePill(dense: true, label: 'STREAMING'),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF21262D) : Dp.canvasSoft,
+                    borderRadius: BorderRadius.circular(Dp.rFull),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF38444D) : Dp.hairline,
+                    ),
+                  ),
+                  child: Text(
+                    '${cc.total}',
+                    style: AppText.dataStrong.copyWith(color: Dp.ink, fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+            if (latest != null) ...[
+              const SizedBox(height: 10),
+              _LatestStrip(event: latest),
             ],
-          ),
-          if (latest != null) ...[
-            const SizedBox(height: 10),
-            _LatestStrip(event: latest),
           ],
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ResizePill extends StatelessWidget {
+  const _ResizePill({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Dp.isDark;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(Dp.rFull),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF21262D) : Dp.field,
+            borderRadius: BorderRadius.circular(Dp.rFull),
+            border: Border.all(
+              color: isDark ? const Color(0xFF38444D) : Dp.hairlineSoft,
+            ),
+          ),
+          child: Text(
+            label,
+            style: monoTxt(
+              8.5,
+              color: isDark ? const Color(0xFFC9D1D9) : Dp.inkSoft,
+              w: FontWeight.w700,
+              ls: 0.5,
+            ),
+          ),
+        ),
       ),
     );
   }
