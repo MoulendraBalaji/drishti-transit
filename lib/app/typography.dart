@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'motion.dart';
+import 'palette.dart';
 
-/// Typography for Drishti.
+/// Typography for Drishti Transit — calibrated with DESIGN-mobbin.md.
 ///
-/// One display family (Fraunces) for the wordmark, titles and big numbers.
-/// One technical family (IBM Plex Sans) for body and labels, paired with its
-/// true monospace (IBM Plex Mono) so GPS / time / confidence / plates read as
-/// data. Hierarchy is built with weight, size and tracking, never more fonts.
+/// Display titles, clean modern sans body, and crisp monospace data telemetry.
+/// Monochromatic hierarchy using Dp.ink (#141414), Dp.textMuted (#707070),
+/// and Dp.textFaint (#ADADAD).
 class AppText {
   AppText._();
 
@@ -15,41 +15,45 @@ class AppText {
   static const String sans = 'IBMPlexSans';
   static const String mono = 'IBMPlexMono';
 
-  static const Color hi = Color(0xFFE9EEF8);
-  static const Color mi = Color(0xFF96A5C0);
-  static const Color lo = Color(0xFF5D6D8A);
+  static const Color hi = Dp.ink;
+  static const Color mi = Dp.textMuted;
+  static const Color lo = Dp.textFaint;
 
-  // --- Display (Fraunces) -----------------------------------------------
+  // --- Display Typography (DESIGN-mobbin.md hierarchy) ---------------------
   static const TextStyle displayHero = TextStyle(
     fontFamily: display,
-    fontSize: 44,
-    height: 1.02,
-    fontWeight: FontWeight.w600,
-    letterSpacing: -1.2,
+    fontSize: 42,
+    height: 1.05,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -1.0,
+    color: Dp.ink,
   );
 
   static const TextStyle displayTitle = TextStyle(
     fontFamily: display,
     fontSize: 24,
-    height: 1.08,
-    fontWeight: FontWeight.w600,
-    letterSpacing: -0.4,
+    height: 1.15,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.3,
+    color: Dp.ink,
   );
 
   static const TextStyle displaySection = TextStyle(
     fontFamily: display,
-    fontSize: 19,
-    height: 1.12,
+    fontSize: 18,
+    height: 1.2,
     fontWeight: FontWeight.w600,
     letterSpacing: -0.2,
+    color: Dp.ink,
   );
 
   static const TextStyle displayNumber = TextStyle(
     fontFamily: display,
-    fontSize: 30,
-    height: 1,
-    fontWeight: FontWeight.w600,
-    letterSpacing: -0.6,
+    fontSize: 28,
+    height: 1.0,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.5,
+    color: Dp.ink,
   );
 
   static TextStyle displaySmall({double size = 13}) => TextStyle(
@@ -57,23 +61,26 @@ class AppText {
         fontSize: size,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.1,
+        color: Dp.ink,
       );
 
   // --- Technical body (IBM Plex Sans) ----------------------------------
   static const TextStyle body = TextStyle(
     fontFamily: sans,
-    fontSize: 14,
-    height: 1.42,
+    fontSize: 15,
+    height: 1.4,
     fontWeight: FontWeight.w400,
     letterSpacing: 0.1,
+    color: Dp.ink,
   );
 
   static const TextStyle bodySmall = TextStyle(
     fontFamily: sans,
-    fontSize: 12.5,
+    fontSize: 13,
     height: 1.35,
     fontWeight: FontWeight.w400,
-    letterSpacing: 0.2,
+    letterSpacing: 0.15,
+    color: Dp.textMuted,
   );
 
   static const TextStyle label = TextStyle(
@@ -81,16 +88,18 @@ class AppText {
     fontSize: 12,
     height: 1.2,
     fontWeight: FontWeight.w600,
-    letterSpacing: 0.6,
+    letterSpacing: 0.4,
+    color: Dp.ink,
   );
 
-  // --- Data (IBM Plex Mono) --------------------------------------------
+  // --- Data & Telemetry (IBM Plex Mono) --------------------------------
   static const TextStyle data = TextStyle(
     fontFamily: mono,
     fontSize: 12,
     height: 1.3,
     fontWeight: FontWeight.w400,
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
+    color: Dp.ink,
   );
 
   static const TextStyle dataStrong = TextStyle(
@@ -98,7 +107,8 @@ class AppText {
     fontSize: 12,
     height: 1.3,
     fontWeight: FontWeight.w600,
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
+    color: Dp.ink,
   );
 
   static const TextStyle dataBig = TextStyle(
@@ -107,14 +117,16 @@ class AppText {
     height: 1.1,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.2,
+    color: Dp.ink,
   );
 
   static const TextStyle dataTiny = TextStyle(
     fontFamily: mono,
-    fontSize: 9.5,
+    fontSize: 10,
     height: 1.25,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0.7,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.6,
+    color: Dp.textMuted,
   );
 }
 
@@ -126,7 +138,7 @@ TextStyle monoTxt(double size, {Color? color, FontWeight? w, double? ls}) =>
       height: 1.25,
       fontWeight: w ?? FontWeight.w500,
       letterSpacing: ls ?? 0.4,
-      color: color,
+      color: color ?? Dp.ink,
     );
 
 Curve tech() => Mo.easeOutTech;

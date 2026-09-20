@@ -13,8 +13,9 @@ import '../core/sim.dart';
 import '../ui/chrome.dart';
 import '../ui/glyphs.dart';
 
-/// Network Insight — road-condition corridor map, congestion trend, defect
-/// breakdown and origin–destination sketch, all driven by the live stream.
+/// Network Insight — Mobbin gallery-white design language.
+/// Road-condition corridor grid, 24h congestion trend line,
+/// defect breakdown progress bars, and origin–destination flow telemetry.
 class AnalyticsScreen extends StatelessWidget {
   const AnalyticsScreen({super.key});
 
@@ -22,29 +23,29 @@ class AnalyticsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cc = context.watch<CommandCenter>();
     return ColoredBox(
-      color: Dp.bg,
+      color: Dp.canvas,
       child: SafeArea(
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(14, 8, 14, 20),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
           children: [
             _Header(cc: cc),
-            const SizedBox(height: 14),
-            _KpiRow(cc: cc),
             const SizedBox(height: 16),
-            const SectionHeader('ROAD CONDITION · CORRIDOR GRID'),
+            _KpiRow(cc: cc),
+            const SizedBox(height: 18),
+            const SectionHeader('ROAD NETWORK HEALTH · CORRIDOR MONITOR'),
             const SizedBox(height: 8),
             _CorridorPanel(cc: cc),
-            const SizedBox(height: 16),
-            const SectionHeader('CONGESTION TREND · 24H'),
+            const SizedBox(height: 18),
+            const SectionHeader('CONGESTION PROFILE · 24H LIVE VS BASELINE'),
             const SizedBox(height: 8),
             _TrendPanel(cc: cc),
-            const SizedBox(height: 16),
-            const SectionHeader('DEFECT BREAKDOWN'),
+            const SizedBox(height: 18),
+            const SectionHeader('EDGE DETECTION CLASSIFICATION BREAKDOWN'),
             const SizedBox(height: 8),
             _BreakdownPanel(cc: cc),
-            const SizedBox(height: 16),
-            const SectionHeader('ORIGIN → DESTINATION · PEAK FLOW'),
+            const SizedBox(height: 18),
+            const SectionHeader('ORIGIN → DESTINATION · FLOW NETWORK'),
             const SizedBox(height: 8),
             _OdPanel(cc: cc),
           ],
@@ -60,21 +61,41 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('NETWORK INSIGHT',
-                style: AppText.displayTitle.copyWith(fontSize: 24)),
-            Text('PUNE METRO · ${_date()}',
-                style: AppText.dataTiny.copyWith(color: Dp.saffron, letterSpacing: 1.2)),
-          ],
-        ),
-        const Spacer(),
-        const LivePill(label: 'LIVE'),
-      ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Dp.canvasSoft,
+        borderRadius: BorderRadius.circular(Dp.rMd),
+        border: Border.all(color: Dp.hairline),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'NETWORK INSIGHT',
+                style: AppText.displayTitle.copyWith(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'PUNE METROPOLITAN GRID · ${_date()}',
+                style: AppText.dataTiny.copyWith(
+                  color: Dp.accent,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          const LivePill(dense: true, label: 'SYSTEM LIVE'),
+        ],
+      ),
     );
   }
 
@@ -95,31 +116,33 @@ class _KpiRow extends StatelessWidget {
       children: [
         Expanded(
           child: Panel(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             child: StatBlock(
               number: cc.total.toString(),
-              label: 'INCIDENTS · TODAY',
-              color: Dp.signal,
+              label: 'DETECTIONS',
+              color: Dp.ink,
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
         Expanded(
           child: Panel(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             child: StatBlock(
               number: '${cc.busesOnline}',
-              label: 'SENSOR BUSES',
+              label: 'ACTIVE NODES',
+              color: Dp.accent,
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
         Expanded(
           child: Panel(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             child: StatBlock(
               number: '${cc.coveragePercent}%',
-              label: 'GRID COVERED',
+              label: 'CITY COVERAGE',
+              color: Dp.ink,
             ),
           ),
         ),
@@ -127,8 +150,6 @@ class _KpiRow extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
 
 class _CorridorPanel extends StatelessWidget {
   const _CorridorPanel({required this.cc});
@@ -138,49 +159,67 @@ class _CorridorPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final corridors = cc.corridors;
     return Panel(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AspectRatio(
-            aspectRatio: 1.45,
-            child: CustomPaint(
-              painter: _CorridorSkyPainter(corridors),
+          Container(
+            decoration: BoxDecoration(
+              color: Dp.canvasSoft,
+              borderRadius: BorderRadius.circular(Dp.rSm),
+              border: Border.all(color: Dp.hairline),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(Dp.rSm - 1),
+              child: AspectRatio(
+                aspectRatio: 1.5,
+                child: CustomPaint(
+                  painter: _CorridorSkyPainter(corridors),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Wrap(
-            spacing: 10,
-            runSpacing: 6,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               for (final c in corridors)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: _scoreColor(c.score),
-                        shape: BoxShape.circle,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Dp.canvasSoft,
+                    borderRadius: BorderRadius.circular(Dp.rFull),
+                    border: Border.all(color: Dp.hairline),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _scoreColor(c.score),
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 5),
-                    Text('${c.id} ${c.name} ${c.score.toStringAsFixed(0)}',
-                        style: AppText.dataTiny.copyWith(color: Dp.mist)),
-                  ],
+                      const SizedBox(width: 6),
+                      Text(
+                        '${c.id} · ${c.name} (${c.score.toStringAsFixed(0)}%)',
+                        style: monoTxt(9.5, color: Dp.ink, w: FontWeight.w600),
+                      ),
+                    ],
+                  ),
                 ),
             ],
           ),
-          const SizedBox(height: 4),
-          const HairDivider(color: Dp.line, thickness: 90),
         ],
       ),
     );
   }
 
   static Color _scoreColor(double s) {
-    if (s >= 82) return Dp.signal;
+    if (s >= 82) return Dp.accent;
     if (s >= 68) return Dp.watch;
     if (s >= 55) return Dp.elevated;
     return Dp.critical;
@@ -193,7 +232,6 @@ class _CorridorSkyPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // fit corridor grid into the canvas
     double mnLat = 90, mxLat = -90, mnLng = 180, mxLng = -180;
     for (final c in corridors) {
       for (final (lat, lng) in c.geo) {
@@ -203,16 +241,15 @@ class _CorridorSkyPainter extends CustomPainter {
         if (lng > mxLng) mxLng = lng;
       }
     }
-    const margin = 24.0;
+    const margin = 26.0;
     double X(double lng) =>
         margin + (lng - mnLng) / (mxLng - mnLng) * (size.width - margin * 2);
     double Y(double lat) =>
         margin + (mxLat - lat) / (mxLat - mnLat) * (size.height - margin * 2);
 
-    // faint survey grid
     final grid = Paint()
-      ..color = Dp.line.withValues(alpha: 0.4)
-      ..strokeWidth = 0.5;
+      ..color = Dp.hairline
+      ..strokeWidth = 1.0;
     for (var i = 0; i <= 4; i++) {
       final fx = size.width * i / 4;
       canvas.drawLine(Offset(fx, 0), Offset(fx, size.height), grid);
@@ -230,40 +267,29 @@ class _CorridorSkyPainter extends CustomPainter {
       canvas.drawPath(
         path,
         Paint()
-          ..color = col.withValues(alpha: 0.85)
+          ..color = col
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.2
+          ..strokeWidth = 2.5
           ..strokeCap = StrokeCap.round,
       );
-      // nodes + endpoint tag
       for (final p in pts) {
-        canvas.drawCircle(p, 2.2, Paint()..color = col);
+        canvas.drawCircle(p, 3, Paint()..color = Colors.white);
+        canvas.drawCircle(p, 2, Paint()..color = col);
       }
       final end = pts.last;
       final tp = TextPainter(
         text: TextSpan(
             text: c.id,
-            style: monoTxt(8, color: col, w: FontWeight.w700, ls: 0.6)),
+            style: monoTxt(8.5, color: Dp.ink, w: FontWeight.w700, ls: 0.5)),
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(canvas, end + const Offset(6, -4));
     }
-
-    // center crosshair
-    final cx = Paint()
-      ..color = Dp.lineBright.withValues(alpha: 0.5)
-      ..strokeWidth = 1;
-    canvas.drawLine(Offset(size.width / 2, margin),
-        Offset(size.width / 2, size.height - margin), cx);
-    canvas.drawLine(Offset(margin, size.height / 2),
-        Offset(size.width - margin, size.height / 2), cx);
   }
 
   @override
   bool shouldRepaint(_CorridorSkyPainter old) => old.corridors != corridors;
 }
-
-// ---------------------------------------------------------------------------
 
 class _TrendPanel extends StatelessWidget {
   const _TrendPanel({required this.cc});
@@ -277,7 +303,7 @@ class _TrendPanel extends StatelessWidget {
     final base = [for (var i = 0; i < 24; i++) (FlSpot(i.toDouble(), baseline[i]))];
 
     return Panel(
-      padding: const EdgeInsets.only(top: 14, bottom: 6, left: 14, right: 14),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -294,26 +320,23 @@ class _TrendPanel extends StatelessWidget {
                   drawVerticalLine: false,
                   horizontalInterval: 0.25,
                   getDrawingHorizontalLine: (_) =>
-                      FlLine(color: Dp.line, strokeWidth: 1),
+                      const FlLine(color: Dp.hairline, strokeWidth: 1),
                 ),
                 borderData: FlBorderData(show: false),
                 lineTouchData: const LineTouchData(enabled: false),
                 titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 24,
+                      reservedSize: 28,
                       interval: 0.5,
                       getTitlesWidget: (v, _) => Padding(
                         padding: const EdgeInsets.only(right: 6),
                         child: Text(
-                          (v * 100).toStringAsFixed(0),
-                          style: AppText.dataTiny.copyWith(
-                              color: Dp.dim, fontSize: 7.5),
+                          '${(v * 100).toStringAsFixed(0)}%',
+                          style: AppText.dataTiny.copyWith(color: Dp.textMuted, fontSize: 8),
                           textAlign: TextAlign.right,
                         ),
                       ),
@@ -323,13 +346,12 @@ class _TrendPanel extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       interval: 3,
-                      reservedSize: 18,
+                      reservedSize: 20,
                       getTitlesWidget: (v, _) => Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          '${v.toInt()}',
-                          style: AppText.dataTiny.copyWith(
-                              color: Dp.dim, fontSize: 8),
+                          '${v.toInt()}:00',
+                          style: AppText.dataTiny.copyWith(color: Dp.textMuted, fontSize: 8),
                         ),
                       ),
                     ),
@@ -338,21 +360,21 @@ class _TrendPanel extends StatelessWidget {
                 lineBarsData: [
                   LineChartBarData(
                     spots: base,
-                    color: Dp.fog.withValues(alpha: 0.5),
-                    barWidth: 1.4,
+                    color: Dp.textFaint,
+                    barWidth: 1.5,
                     isCurved: true,
                     curveSmoothness: 0.25,
                     dotData: const FlDotData(show: false),
                   ),
                   LineChartBarData(
                     spots: spots,
-                    color: Dp.signal,
-                    barWidth: 2.4,
+                    color: Dp.accent,
+                    barWidth: 2.8,
                     isCurved: true,
-                    curveSmoothness: 0.4,
+                    curveSmoothness: 0.35,
                     belowBarData: BarAreaData(
                       show: true,
-                      color: Dp.signal.withValues(alpha: 0.10),
+                      color: Dp.accent.withValues(alpha: 0.08),
                     ),
                     dotData: const FlDotData(show: false),
                   ),
@@ -360,14 +382,14 @@ class _TrendPanel extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 10),
           Row(
             children: [
-              _legendDot(Dp.fog.withValues(alpha: 0.6), 'BASELINE'),
-              const SizedBox(width: 12),
-              _legendDot(Dp.signal, 'TODAY · LIVE'),
+              _legendDot(Dp.textFaint, 'HISTORICAL BASELINE'),
+              const SizedBox(width: 16),
+              _legendDot(Dp.accent, 'LIVE INFERENCE PROFILE'),
             ],
           ),
-          const SizedBox(height: 6),
         ],
       ),
     );
@@ -377,20 +399,13 @@ class _TrendPanel extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 8,
-          height: 2,
-          color: c,
-        ),
-        const SizedBox(width: 5),
-        Text(label,
-            style: AppText.dataTiny.copyWith(color: Dp.mist, fontSize: 8)),
+        Container(width: 12, height: 3, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(1.5))),
+        const SizedBox(width: 6),
+        Text(label, style: AppText.dataTiny.copyWith(color: Dp.textMuted, fontSize: 8.5)),
       ],
     );
   }
 }
-
-// ---------------------------------------------------------------------------
 
 class _BreakdownPanel extends StatelessWidget {
   const _BreakdownPanel({required this.cc});
@@ -406,7 +421,7 @@ class _BreakdownPanel extends StatelessWidget {
     final max = rows.first.$2;
 
     return Panel(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           for (final (kind, count) in rows)
@@ -414,29 +429,42 @@ class _BreakdownPanel extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 7),
               child: Row(
                 children: [
-                  SizedBox(
-                    width: 34,
-                    child: Drishti.icon(_glyphFor(kind),
-                        size: 15,
-                        color: Dp.severityColor(kind.baseSeverity)),
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: Dp.canvasSoft,
+                      borderRadius: BorderRadius.circular(7),
+                      border: Border.all(color: Dp.hairline),
+                    ),
+                    alignment: Alignment.center,
+                    child: Drishti.icon(
+                      _glyphFor(kind),
+                      size: 14,
+                      color: Dp.severityColor(kind.baseSeverity),
+                    ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     flex: 5,
-                    child: Text(kind.label.toUpperCase(),
-                        style: AppText.dataTiny.copyWith(
-                            color: Dp.mist, letterSpacing: 0.6)),
+                    child: Text(
+                      kind.label.toUpperCase(),
+                      style: AppText.dataTiny.copyWith(
+                        color: Dp.ink,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
                   ),
                   Expanded(
                     flex: 6,
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(3),
                       child: Container(
                         height: 7,
-                        color: Dp.raised2,
+                        color: Dp.field,
                         child: TweenAnimationBuilder<double>(
-                          tween: Tween(
-                              begin: 0, end: max == 0 ? 0 : count / max),
+                          tween: Tween(begin: 0, end: max == 0 ? 0 : count / max),
                           duration: Mo.standard,
                           curve: Mo.easeOutTech,
                           builder: (context, t, _) => FractionallySizedBox(
@@ -445,7 +473,7 @@ class _BreakdownPanel extends StatelessWidget {
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Dp.severityColor(kind.baseSeverity),
-                                borderRadius: BorderRadius.circular(2),
+                                borderRadius: BorderRadius.circular(3),
                               ),
                             ),
                           ),
@@ -453,13 +481,14 @@ class _BreakdownPanel extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   SizedBox(
-                    width: 26,
-                    child: Text('$count',
-                        textAlign: TextAlign.right,
-                        style: monoTxt(11,
-                            color: Dp.ink, w: FontWeight.w700, ls: 0)),
+                    width: 28,
+                    child: Text(
+                      '$count',
+                      textAlign: TextAlign.right,
+                      style: monoTxt(12, color: Dp.ink, w: FontWeight.w700),
+                    ),
                   ),
                 ],
               ),
@@ -479,8 +508,6 @@ class _BreakdownPanel extends StatelessWidget {
       };
 }
 
-// ---------------------------------------------------------------------------
-
 class _OdPanel extends StatelessWidget {
   const _OdPanel({required this.cc});
   final CommandCenter cc;
@@ -493,24 +520,36 @@ class _OdPanel extends StatelessWidget {
     final top = pairs.take(6).toList();
 
     return Panel(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AspectRatio(
-            aspectRatio: 1.6,
-            child: CustomPaint(
-              painter: _OdSkyPainter(zones, top),
+          Container(
+            decoration: BoxDecoration(
+              color: Dp.canvasSoft,
+              borderRadius: BorderRadius.circular(Dp.rSm),
+              border: Border.all(color: Dp.hairline),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(Dp.rSm - 1),
+              child: AspectRatio(
+                aspectRatio: 1.6,
+                child: CustomPaint(
+                  painter: _OdSkyPainter(zones, top),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
           Wrap(
-            spacing: 10,
-            runSpacing: 4,
+            spacing: 12,
+            runSpacing: 6,
             children: [
               for (final z in zones)
-                Text('${z.id + 1}·${z.name}',
-                    style: AppText.dataTiny.copyWith(color: Dp.mist)),
+                Text(
+                  '${z.id + 1} · ${z.name}',
+                  style: AppText.dataTiny.copyWith(color: Dp.textMuted, fontWeight: FontWeight.w600),
+                ),
             ],
           ),
         ],
@@ -528,7 +567,6 @@ class _OdSkyPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     Offset P(Zone z) => Offset(z.x * size.width, z.y * size.height);
 
-    // arcs (drawn beneath nodes)
     for (final entry in top) {
       final from = zones[entry.key.$1];
       final to = zones[entry.key.$2];
@@ -536,47 +574,41 @@ class _OdSkyPainter extends CustomPainter {
       final b = P(to);
       final dx = b.dx - a.dx;
       final dy = b.dy - a.dy;
-      final ctrl = a +
-          Offset(dx / 2 - dy * 0.28, dy / 2 + dx * 0.28);
+      final ctrl = a + Offset(dx / 2 - dy * 0.28, dy / 2 + dx * 0.28);
       final path = Path()
         ..moveTo(a.dx, a.dy)
         ..quadraticBezierTo(ctrl.dx, ctrl.dy, b.dx, b.dy);
       final count = entry.value;
-      final intensity = (count / 40).clamp(0.2, 1.0);
+      final intensity = (count / 40).clamp(0.25, 1.0);
       canvas.drawPath(
         path,
         Paint()
-          ..color = Dp.signal.withValues(alpha: intensity)
+          ..color = Dp.accent.withValues(alpha: intensity * 0.8)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1 + intensity * 2.4
+          ..strokeWidth = 1.2 + intensity * 2.2
           ..strokeCap = StrokeCap.round,
       );
-      // count label at arc midpoint
       final mid = Offset((a.dx + b.dx) / 2, (a.dy + b.dy) / 2);
       final tp = TextPainter(
         text: TextSpan(
-            text: '$count',
-            style: monoTxt(8.5,
-                color: Dp.signal.withValues(alpha: intensity),
-                w: FontWeight.w700)),
+          text: '$count',
+          style: monoTxt(8.5, color: Dp.accent, w: FontWeight.w800),
+        ),
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(canvas, mid.translate(-tp.width / 2, -tp.height - 1));
     }
 
-    // nodes
     for (final z in zones) {
       final p = P(z);
-      final n = math.max(z.id == 2 ? 4.5 : 3.5, 3.0);
-      canvas.drawCircle(
-          p, n + 2, Paint()..color = Dp.surface);
-      canvas.drawCircle(
-          p, n, Paint()..color = z.id == 1 ? Dp.saffron : Dp.signal);
+      final n = math.max(z.id == 2 ? 5.0 : 4.0, 3.5);
+      canvas.drawCircle(p, n + 2, Paint()..color = Colors.white);
+      canvas.drawCircle(p, n, Paint()..color = Dp.primary);
       final tp = TextPainter(
         text: TextSpan(
-            text: '${z.id + 1}',
-            style: monoTxt(8,
-                color: Dp.onSignal, w: FontWeight.w700)),
+          text: '${z.id + 1}',
+          style: monoTxt(7.5, color: Colors.white, w: FontWeight.w800),
+        ),
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(canvas, p - Offset(tp.width / 2, tp.height / 2));

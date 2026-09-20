@@ -80,74 +80,9 @@ jobs:
             build/app/outputs/flutter-apk/app-release.apk.sha1
           if-no-files-found: error
 
-  ios:
-    name: Build iOS IPA
-    needs: library-check
-    runs-on: macos-14
-    env:
-      SIGN_IOS: ${{ secrets.SIGN_IOS }}
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Restore dependencies
-        run: flutter pub get
-
-      - name: Set up iOS signing keys
-        if: env.SIGN_IOS == 'true'
-        run: |
-          mkdir -p ~/ios-certs
-          echo "${{ secrets.CERTIFICATE_BASE64 }}" | base64 --decode > ~/ios-certs/cert.p12
-          echo "${{ secrets.IOS_DISTRIBUTION_PROFILE_BASE64 }}" | base64 --decode > ~/ios-certs/profile.mobileprovision
-          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          security import ~/ios-certs/cert.p12 -k build.keychain -P "${{ secrets.CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp ~/ios-certs/profile.mobileprovision \
-            ~/Library/MobileDevice/Provisioning\ Profiles/
-
-      - name: Build IPA (signed)
-        if: env.SIGN_IOS == 'true'
-        run: flutter build ipa --release
-
-      - name: Build IPA (unsigned)
-        if: env.SIGN_IOS != 'true'
-        run: |
-          flutter build ipa --no-codesign
-          # Newer Flutter versions stop before exporting an IPA when codesigning
-          # is disabled; they leave a Runner.xcarchive. Package the signed-out
-          # app bundle into a valid IPA (Payload/<App>.app) so the release
-          # always carries an iOS artifact.
-          if ! compgen -G "build/ios/ipa/*.ipa" > /dev/null; then
-            APP=build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app
-            if [ ! -d "$APP" ]; then
-              echo "::error::Runner.app not found in the archive ($APP)"
-              exit 1
-            fi
-            rm -rf Payload && mkdir -p Payload
-            cp -R "$APP" Payload/
-            mkdir -p build/ios/ipa
-            ditto -c -k --sequesterRsrc --keepParent Payload build/ios/ipa/Runner.ipa
-            rm -rf Payload
-          fi
-          ls -la build/ios/ipa
-
-      - name: Upload iOS artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: ios-ipa
-          path: build/ios/ipa/*.ipa
-          if-no-files-found: error
-
   release:
     name: Publish GitHub Release
-    needs: [android, ios]
+    needs: [android]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -181,11 +116,9 @@ jobs:
             Automated build for **Drishti-Transit**.
 
             - Android: `Drishti Transit` release APK (`app-release.apk`)
-            - iOS: archive export (`*.ipa`)
           draft: false
           generate_release_notes: true
           files: |
             release-assets/*.apk
             release-assets/*.apk.sha1
-            release-assets/*.ipa
           fail_on_unmatched_files: true

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,8 +12,9 @@ import '../core/command_center.dart';
 import '../ui/chrome.dart';
 import '../ui/glyphs.dart';
 
-/// Mission boot screen — sets the tone in under two and a half seconds, then
-/// hands over to the command shell with a scale-out / settle transition.
+/// Mission boot screen — Mobbin gallery-white design language.
+/// 30% squircle Drishti icon tile, bold typography, edge system telemetry,
+/// and stadium-pill entrance CTA.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -26,18 +26,15 @@ class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   late final AnimationController _boot = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 2400),
+    duration: const Duration(milliseconds: 2200),
   )..forward();
-  late final AnimationController _radar = AnimationController(
-    vsync: this,
-    duration: Mo.radarSweep,
-  )..repeat();
+
   Timer? _advance;
 
   @override
   void initState() {
     super.initState();
-    _advance = Timer(const Duration(milliseconds: 2650), _enter);
+    _advance = Timer(const Duration(milliseconds: 3200), _enter);
   }
 
   void _enter() {
@@ -50,7 +47,6 @@ class _SplashScreenState extends State<SplashScreen>
   void dispose() {
     _advance?.cancel();
     _boot.dispose();
-    _radar.dispose();
     super.dispose();
   }
 
@@ -58,79 +54,132 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     final cc = context.watch<CommandCenter>();
     return Scaffold(
-      backgroundColor: Dp.bg,
+      backgroundColor: Dp.canvas,
       body: GestureDetector(
         onTap: _enter,
         behavior: HitTestBehavior.opaque,
-        child: Stack(
-          children: [
-            // faint survey grid
-            Positioned.fill(
-              child: CustomPaint(painter: _GridPainter()),
-            ),
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Column(
-                  children: [
-                    const Spacer(),
-                    FadeTransition(
-                      opacity: CurvedAnimation(
-                          parent: _boot, curve: Intervals(0, 0.4)),
-                      child: AnimatedBuilder(
-                        animation: _radar,
-                        builder: (context, _) => CustomPaint(
-                          size: const Size(96, 96),
-                          painter: _RadarPainter(_radar.value),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    FadeTransition(
-                      opacity: CurvedAnimation(
-                          parent: _boot, curve: Intervals(0.12, 0.5)),
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                                begin: const Offset(0, 0.08), end: Offset.zero)
-                            .animate(CurvedAnimation(
-                                parent: _boot, curve: Mo.easeOutTech)),
-                        child: Column(
-                          children: [
-                            Text(
-                              'DRISHTI',
-                              style: AppText.displayHero.copyWith(
-                                  fontSize: 52, letterSpacing: -2),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Column(
+              children: [
+                const Spacer(flex: 2),
+                FadeTransition(
+                  opacity: CurvedAnimation(
+                      parent: _boot, curve: const Interval(0, 0.45)),
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                            begin: const Offset(0, 0.1), end: Offset.zero)
+                        .animate(CurvedAnimation(
+                            parent: _boot, curve: Mo.easeOutTech)),
+                    child: Column(
+                      children: [
+                        // Mobbin 30% squircle icon tile
+                        Container(
+                          width: 104,
+                          height: 104,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(31),
+                            border: Border.all(color: Dp.hairline, width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 24,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(30),
+                            child: Image.asset(
+                              'assets/images/dristhi.jpeg',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                color: Dp.primary,
+                                alignment: Alignment.center,
+                                child: const Text(
+                                  'D',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
                             ),
-                            const SizedBox(height: 8),
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                        Text(
+                          'DRISHTI',
+                          style: AppText.displayHero.copyWith(
+                            fontSize: 44,
+                            letterSpacing: -1.2,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: Dp.accent,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             Text(
-                              'TRANSIT · EDGE-AI · NETWORK',
+                              'EDGE-AI URBAN INTELLIGENCE',
                               style: AppText.dataTiny.copyWith(
-                                  color: Dp.saffron, letterSpacing: 2.4),
+                                color: Dp.accent,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.6,
+                              ),
                             ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 14),
+                        Text(
+                          'Transforming city transit into a live neural sensor network.',
+                          textAlign: TextAlign.center,
+                          style: AppText.body.copyWith(
+                            color: Dp.textMuted,
+                            fontSize: 14,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 18),
-                    FadeTransition(
-                      opacity: CurvedAnimation(
-                          parent: _boot, curve: Intervals(0.3, 0.6)),
-                      child: Text(
-                        'Every bus is a sensor for the city.',
-                        style: AppText.body.copyWith(
-                            color: Dp.mist, fontStyle: FontStyle.normal),
-                      ),
-                    ),
-                    const Spacer(),
-                    _BootReadout(boot: _boot, buses: cc.busesOnline),
-                    const SizedBox(height: 26),
-                    _BootHint(boot: _boot),
-                    const SizedBox(height: 18),
-                  ],
+                  ),
                 ),
-              ),
+                const Spacer(flex: 2),
+                _BootReadout(boot: _boot, buses: cc.busesOnline),
+                const SizedBox(height: 24),
+                FadeTransition(
+                  opacity: CurvedAnimation(
+                      parent: _boot, curve: const Interval(0.7, 1)),
+                  child: CommandButton(
+                    label: 'ENTER COMMAND SYSTEM',
+                    onTap: _enter,
+                    icon: DGlyph.target,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  'DRISHTI TRANSIT · NATIONAL INITIATIVE',
+                  style: AppText.dataTiny.copyWith(
+                    color: Dp.textFaint,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -143,29 +192,36 @@ class _BootReadout extends StatelessWidget {
   final int buses;
 
   Widget _line(int index, String text) {
-    final start = 0.42 + index * 0.12;
+    final start = 0.35 + index * 0.12;
     return FadeTransition(
-      opacity: CurvedAnimation(parent: boot, curve: Intervals(start, start + 0.15)),
+      opacity: CurvedAnimation(
+          parent: boot, curve: Interval(start, (start + 0.18).clamp(0, 1))),
       child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0.06, 0), end: Offset.zero)
+        position: Tween<Offset>(begin: const Offset(0.04, 0), end: Offset.zero)
             .animate(CurvedAnimation(parent: boot, curve: Mo.easeOutTech)),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5),
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(
             children: [
               SizedBox(
-                width: 22,
+                width: 20,
                 child: AnimatedBuilder(
                   animation: boot,
                   builder: (context, child) => Opacity(
-                    opacity: boot.value > start + 0.08 ? 1 : 0,
+                    opacity: boot.value > start + 0.05 ? 1 : 0,
                     child: child,
                   ),
-                  child:
-                      Drishti.icon(DGlyph.check, size: 14, color: Dp.signal),
+                  child: Drishti.icon(DGlyph.check, size: 13, color: Dp.accent),
                 ),
               ),
-              Text(text, style: AppText.data.copyWith(color: Dp.mist)),
+              Text(
+                text,
+                style: AppText.data.copyWith(
+                  color: Dp.textMuted,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
         ),
@@ -175,99 +231,23 @@ class _BootReadout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Panel(
-      color: Dp.surface,
+    return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        color: Dp.canvasSoft,
+        borderRadius: BorderRadius.circular(Dp.rMd),
+        border: Border.all(color: Dp.hairline),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _line(0, 'GRID 42/42 · CORRIDORS LOCKED'),
-          _line(1, 'EDGE $buses/$buses · NODES ONLINE'),
-          _line(2, 'UPLINK TO COMMAND · SECURE'),
-          _line(3, 'MODEL DRISHTI-YOLOv2 · READY'),
+          _line(0, 'GRID 42/42 · CORRIDORS SYNCHRONIZED'),
+          _line(1, 'EDGE $buses/$buses · INFERENCE NODES ONLINE'),
+          _line(2, 'GOOGLE MAPS & GEOPATIAL ENGINES · ACTIVE'),
+          _line(3, 'EDGE MODEL DRISHTI-YOLOv8 · HIGH ACCURACY READY'),
         ],
       ),
     );
   }
-}
-
-class _BootHint extends StatelessWidget {
-  const _BootHint({required this.boot});
-  final AnimationController boot;
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: CurvedAnimation(parent: boot, curve: const Intervals(0.82, 1)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('TAP TO TAKE COMMAND',
-              style: AppText.dataTiny.copyWith(color: Dp.fog, letterSpacing: 1.6)),
-          const SizedBox(width: 6),
-          Drishti.icon(DGlyph.chevronRight, size: 12, color: Dp.fog),
-        ],
-      ),
-    );
-  }
-}
-
-/// Interval curve shim (Flutter exposes Interval already).
-typedef Intervals = Interval;
-
-class _RadarPainter extends CustomPainter {
-  _RadarPainter(this.t);
-  final double t;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = size.center(Offset.zero);
-    final r = size.width / 2;
-    final line = Paint()
-      ..color = Dp.signal.withValues(alpha: 0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    canvas.drawCircle(c, r * 0.92, line);
-    canvas.drawCircle(c, r * 0.6, Paint()
-      ..color = Dp.signal.withValues(alpha: 0.18)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1);
-    canvas.drawCircle(c, r * 0.3, Paint()
-      ..color = Dp.signal.withValues(alpha: 0.18)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1);
-
-    // sweep
-    canvas.drawArc(Rect.fromCenter(center: c, width: r * 2, height: r * 2),
-        -math.pi / 2 + t * 2 * math.pi, 1.15, false, line);
-
-    canvas.drawCircle(c, r * 0.3, Paint()..color = Dp.signal.withValues(alpha: 0.06));
-    canvas.drawCircle(c, 2.5, Paint()..color = Dp.signal);
-  }
-
-  @override
-  bool shouldRepaint(_RadarPainter old) => old.t != t;
-}
-
-class _GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()
-      ..color = Dp.line.withValues(alpha: 0.4)
-      ..strokeWidth = 0.5;
-    const step = 32.0;
-    var x = 0.0;
-    while (x <= size.width) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), p);
-      x += step;
-    }
-    var y = 0.0;
-    while (y <= size.height) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), p);
-      y += step;
-    }
-  }
-
-  @override
-  bool shouldRepaint(_GridPainter old) => false;
 }

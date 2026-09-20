@@ -37,7 +37,7 @@ class Drishti {
   static Widget icon(
     DGlyph glyph, {
     double size = 20,
-    Color color = const Color(0xFFE9EEF8),
+    Color color = const Color(0xFF141414),
     double stroke = 1.7,
   }) =>
       CustomPaint(

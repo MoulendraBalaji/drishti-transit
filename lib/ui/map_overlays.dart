@@ -21,7 +21,6 @@ class BusMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hero = bus.hero;
-    final accent = Dp.signal;
     return SizedBox(
       width: hero ? 40 : 32,
       height: hero ? 40 : 32,
@@ -33,16 +32,24 @@ class BusMarker extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(1.5),
             decoration: BoxDecoration(
-              color: hero ? Dp.signal : Dp.raised2,
+              color: hero ? Dp.accent : Dp.canvas,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: hero ? accent : Dp.lineBright,
+                color: hero ? Dp.accent : Dp.hairline,
+                width: 1.2,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
             ),
             child: Drishti.icon(
               DGlyph.bus,
               size: hero ? 15 : 13,
-              color: hero ? Dp.onSignal : Dp.vehicleColor,
+              color: hero ? Colors.white : Dp.ink,
             ),
           ),
         ],
@@ -154,13 +161,20 @@ class _ConfChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
         decoration: BoxDecoration(
-          color: const Color(0xE6041122),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: color.withValues(alpha: 0.5)),
+          color: Dp.canvas,
+          borderRadius: BorderRadius.circular(Dp.rFull),
+          border: Border.all(color: color, width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
         child: Text(
           event.confLabel,
-          style: monoTxt(7.5, color: color, w: FontWeight.w700, ls: 0.2),
+          style: monoTxt(8, color: Dp.ink, w: FontWeight.w700, ls: 0.2),
         ),
       ),
     );
@@ -247,21 +261,20 @@ class _PinPainter extends CustomPainter {
       Paint()
         ..shader = RadialGradient(
           colors: [
-            color.withValues(alpha: 0.9),
-            color.withValues(alpha: 0.28),
+            color,
+            color.withValues(alpha: 0.85),
           ],
         ).createShader(Rect.fromLTWH(0, 0, w, h)),
     );
     canvas.drawPath(
       body,
       Paint()
-        ..color = color
+        ..color = Colors.white
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4,
+        ..strokeWidth = 1.5,
     );
-    canvas.drawCircle(o, w * 0.11,
-        Paint()..color = const Color(0xFF041122));
-    canvas.drawCircle(o, w * 0.07, Paint()..color = color);
+    canvas.drawCircle(o, w * 0.12, Paint()..color = Colors.white);
+    canvas.drawCircle(o, w * 0.06, Paint()..color = color);
   }
 
   @override

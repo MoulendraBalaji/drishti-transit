@@ -99,6 +99,9 @@ class DetectionEvent {
     required this.sceneSeed,
     required this.sceneTime,
     this.plate,
+    this.trackId,
+    this.speedKmh,
+    this.distanceM,
   });
 
   final String id;
@@ -116,6 +119,9 @@ class DetectionEvent {
   final int sceneSeed;
   final double sceneTime;
   final String? plate;
+  final String? trackId;
+  final double? speedKmh;
+  final double? distanceM;
 
   String get gpsLabel => '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}';
 
@@ -131,7 +137,7 @@ class DetectionEvent {
 
   int get ageMinutes => DateTime.now().difference(ts).inMinutes;
 
-  String get confLabel => '${(confidence * 100).toStringAsFixed(0)}%';
+  String get confLabel => '${(confidence * 100).toStringAsFixed(1)}%';
 
   String get summary =>
       '${kind.label} ${plate != null ? '· $plate' : ''}';

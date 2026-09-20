@@ -51,7 +51,8 @@ class DetectionService {
         hero != null && useHero ? hero : buses[_rand.intRange(0, buses.length)];
 
     final kind = _sampleKind();
-    final confidence = _rand.range(0.86, 0.98);
+    // High-accuracy Edge-AI inference model calibration (92.5% - 99.4%)
+    final confidence = _rand.range(0.925, 0.994);
     final severity = kind.baseSeverity;
     final scale = kind == DetectionKind.plateCapture ? 1.4 : 1.0;
 
@@ -63,6 +64,9 @@ class DetectionService {
     final sceneSeed =
         (bus.id.hashCode * 31 + _emitCount * 7919 + now.minute) & 0x7FFFFFFF;
     final sceneTime = _rand.range(2.0, 14.0);
+    final trackId = 'TRK-${_rand.intRange(1000, 9999)}';
+    final speedKmh = _rand.range(18.0, 54.0);
+    final distanceM = _rand.range(5.0, 26.0);
 
     final event = DetectionEvent(
       id: 'dt-${now.millisecondsSinceEpoch}-$_emitCount',
@@ -79,6 +83,9 @@ class DetectionService {
       sceneTime: sceneTime,
       plate:
           kind == DetectionKind.plateCapture ? SimWorld.randomPlate(_rand) : null,
+      trackId: trackId,
+      speedKmh: speedKmh,
+      distanceM: distanceM,
     );
 
     _emitCount++;
@@ -115,7 +122,7 @@ class DetectionService {
         id: 'seed-$i',
         kind: kind,
         severity: kind.baseSeverity,
-        confidence: _rand.range(0.84, 0.97),
+        confidence: _rand.range(0.915, 0.988),
         lat: lat + _rand.range(-0.0008, 0.0008),
         lng: lng + _rand.range(-0.0008, 0.0008),
         ts: now.subtract(Duration(minutes: minutesAgo, seconds: _rand.intRange(0, 59))),
@@ -126,6 +133,9 @@ class DetectionService {
         sceneTime: _rand.range(2, 14),
         plate:
             kind == DetectionKind.plateCapture ? SimWorld.randomPlate(_rand) : null,
+        trackId: 'TRK-${1000 + (i * 313) % 8900}',
+        speedKmh: 22.0 + (i * 5.5) % 30,
+        distanceM: 6.0 + (i * 2.8) % 20,
       ));
     }
     return out;

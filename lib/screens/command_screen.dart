@@ -17,8 +17,9 @@ import '../ui/chrome.dart';
 import '../ui/glyphs.dart';
 import '../ui/map_overlays.dart';
 
-/// Central Command map — live fleet, incident pins landing in real time, a
-/// togglable heat layer, arrival ripples, and the draggable OPS feed.
+/// Central Command map — Mobbin Gallery-White design language.
+/// Live fleet tracking, incident pins with crystal clarity, a togglable
+/// heat layer, arrival ripples, and the draggable operations feed sheet.
 class CommandScreen extends StatefulWidget {
   const CommandScreen({super.key});
 
@@ -45,7 +46,7 @@ class _CommandScreenState extends State<CommandScreen> {
     final cc = context.watch<CommandCenter>();
     _onAlertChanged(cc);
     return ColoredBox(
-      color: Dp.bg,
+      color: Dp.canvas,
       child: Stack(
         children: [
           _mapView(cc),
@@ -57,7 +58,7 @@ class _CommandScreenState extends State<CommandScreen> {
               minChildSize: 0.12,
               maxChildSize: Tok.feedSnapMax,
               snap: true,
-              snapSizes: const [0.14, 0.42, 0.64],
+              snapSizes: const [0.16, 0.42, 0.65],
               builder: (context, scroll) => _FeedSheet(
                 cc: cc,
                 scroll: scroll,
@@ -65,7 +66,7 @@ class _CommandScreenState extends State<CommandScreen> {
               ),
             ),
           ),
-          const Positioned(left: 12, bottom: 8, child: _MapAttribution()),
+          const Positioned(left: 14, bottom: 8, child: _MapAttribution()),
         ],
       ),
     );
@@ -84,16 +85,17 @@ class _CommandScreenState extends State<CommandScreen> {
         initialCenter: const LatLng(SimWorld.cityLat, SimWorld.cityLng),
         initialZoom: 12.6,
         minZoom: 10,
-        maxZoom: 17,
+        maxZoom: 18,
         interactionOptions: const InteractionOptions(
           flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
         ),
-        backgroundColor: Dp.bg,
+        backgroundColor: Dp.canvasSoft,
       ),
       children: [
+        // Carto Voyager / Positron light map for crystal-clear detection visibility
         TileLayer(
           urlTemplate:
-              'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+              'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
           subdomains: const ['a', 'b', 'c', 'd'],
           userAgentPackageName: 'in.drishti.transit',
           maxZoom: 19,
@@ -107,9 +109,9 @@ class _CommandScreenState extends State<CommandScreen> {
                     for (final (lat, lng) in corridors[i].geo)
                       LatLng(lat, lng),
                   ],
-                  color: Dp.signal.withValues(
-                      alpha: 0.16 + (i % 3) * 0.03),
-                  strokeWidth: 2,
+                  color: Dp.accent.withValues(
+                      alpha: 0.35 + (i % 3) * 0.08),
+                  strokeWidth: 2.8,
                 ),
             ],
           ),
@@ -156,37 +158,84 @@ class _CommandScreenState extends State<CommandScreen> {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('DRISHTI',
-                        style: AppText.displayTitle.copyWith(fontSize: 22)),
-                    Text('CITY OPS · PUNE GRID',
-                        style: AppText.dataTiny.copyWith(color: Dp.saffron)),
-                  ],
-                ),
-                const Spacer(),
-                const LivePill(),
-                const SizedBox(width: 8),
-                const _ClockTick(),
-              ],
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Dp.canvas.withValues(alpha: 0.94),
+                borderRadius: BorderRadius.circular(Dp.rFull),
+                border: Border.all(color: Dp.hairline),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: Dp.primary,
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'D',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'DRISHTI',
+                        style: AppText.label.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      Text(
+                        'LIVE OPERATIONS',
+                        style: AppText.dataTiny.copyWith(
+                          color: Dp.textMuted,
+                          fontSize: 8.5,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  const LivePill(dense: true),
+                  const SizedBox(width: 8),
+                  const _ClockTick(),
+                ],
+              ),
             ),
             const SizedBox(height: 10),
-            Row(
-              children: [
-                _MiniStat('ALERTS', '${cc.total}'.padLeft(3, '0')),
-                _MiniStat('BUSES', '${cc.busesOnline}'.padLeft(2, '0')),
-                _MiniStat('COVER', '${cc.coveragePercent}%'),
-                const Spacer(),
-                const _MiniTag('GRID 42/42'),
-              ],
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _MiniStat('ALERTS', '${cc.total}'.padLeft(3, '0')),
+                  _MiniStat('FLEET', '${cc.busesOnline}'.padLeft(2, '0')),
+                  _MiniStat('COVERAGE', '${cc.coveragePercent}%'),
+                  _MiniStat('NODES', '42/42'),
+                ],
+              ),
             ),
           ],
         ),
@@ -199,7 +248,7 @@ class _CommandScreenState extends State<CommandScreen> {
       child: Align(
         alignment: Alignment.centerRight,
         child: Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(right: 14),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -209,18 +258,18 @@ class _CommandScreenState extends State<CommandScreen> {
                 label: 'HEAT',
                 onTap: () => setState(() => _heat = !_heat),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               _LayerToggle(
                 glyph: DGlyph.route,
                 active: _routes,
-                label: 'RTE',
+                label: 'ROUTE',
                 onTap: () => setState(() => _routes = !_routes),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               _LayerToggle(
                 glyph: DGlyph.crosshair,
                 active: false,
-                label: 'FIT',
+                label: 'CENTER',
                 onTap: () => _map.move(
                     const LatLng(SimWorld.cityLat, SimWorld.cityLng), 12.6),
               ),
@@ -230,7 +279,6 @@ class _CommandScreenState extends State<CommandScreen> {
       ),
     );
   }
-
 }
 
 class _ClockTick extends StatefulWidget {
@@ -246,7 +294,9 @@ class _ClockTickState extends State<_ClockTick> {
   @override
   void initState() {
     super.initState();
-    _t = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+    _t = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -261,7 +311,7 @@ class _ClockTickState extends State<_ClockTick> {
     final now = DateTime.now();
     return Text(
       '${two(now.hour)}:${two(now.minute)}:${two(now.second)}',
-      style: AppText.dataStrong.copyWith(color: Dp.ink),
+      style: AppText.dataStrong.copyWith(color: Dp.ink, fontSize: 11),
     );
   }
 }
@@ -275,33 +325,39 @@ class _MiniStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Dp.raised,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Dp.line),
+        color: Dp.canvas.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(Dp.rFull),
+        border: Border.all(color: Dp.hairline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(value,
-              style: monoTxt(11,
-                  color: Dp.ink, w: FontWeight.w700, ls: 0.3)),
+          Text(
+            value,
+            style: monoTxt(11, color: Dp.ink, w: FontWeight.w700, ls: 0.2),
+          ),
           const SizedBox(width: 6),
-          Text(label,
-              style: AppText.dataTiny.copyWith(color: Dp.fog, letterSpacing: 0.8)),
+          Text(
+            label,
+            style: AppText.dataTiny.copyWith(
+              color: Dp.textMuted,
+              fontWeight: FontWeight.w600,
+              fontSize: 9,
+              letterSpacing: 0.6,
+            ),
+          ),
         ],
       ),
     );
-  }
-}
-
-class _MiniTag extends StatelessWidget {
-  const _MiniTag(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(text, style: AppText.dataTiny.copyWith(color: Dp.dim));
   }
 }
 
@@ -320,29 +376,42 @@ class _LayerToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final col = active ? Dp.signal : Dp.fog;
+    final bgCol = active ? Dp.primary : Dp.canvas;
+    final fgCol = active ? Colors.white : Dp.ink;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: Mo.fast,
         curve: Mo.easeOutTech,
-        width: 40,
-        height: 40,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
-          color: active
-              ? Dp.signal.withValues(alpha: 0.14)
-              : Dp.raised.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-              color: active ? Dp.signal.withValues(alpha: 0.5) : Dp.line),
+          color: bgCol,
+          shape: BoxShape.circle,
+          border: Border.all(color: active ? Dp.primary : Dp.hairline),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Drishti.icon(glyph, size: 16, color: col),
-            Text(label,
-                style: AppText.dataTiny.copyWith(
-                    color: col, fontSize: 6.5, letterSpacing: 0.4)),
+            Drishti.icon(glyph, size: 16, color: fgCol),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: AppText.dataTiny.copyWith(
+                color: fgCol,
+                fontSize: 6.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.4,
+              ),
+            ),
           ],
         ),
       ),
@@ -355,24 +424,31 @@ class _MapAttribution extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const IgnorePointer(
-      child: Text(
-        '© OpenStreetMap · © CARTO',
-        style: TextStyle(
-          fontFamily: AppText.mono,
-          fontSize: 7.5,
-          letterSpacing: 0.5,
-          color: Dp.dim,
+    return IgnorePointer(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Dp.canvas.withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: Dp.hairline),
+        ),
+        child: const Text(
+          '© OpenStreetMap · © CARTO · Google API',
+          style: TextStyle(
+            fontFamily: AppText.mono,
+            fontSize: 8,
+            letterSpacing: 0.4,
+            color: Dp.textMuted,
+          ),
         ),
       ),
     );
   }
 }
 
-// ---------------------------------------------------------------------------
-// The live OPS feed sheet — draggable, newest-first, auto-updating, sparse.
-// ---------------------------------------------------------------------------
-
+/// ---------------------------------------------------------------------------
+/// The live OPS feed sheet — Mobbin gallery-white sheet with 24px corner geometry.
+/// ---------------------------------------------------------------------------
 class _FeedSheet extends StatelessWidget {
   const _FeedSheet({
     required this.cc,
@@ -386,13 +462,20 @@ class _FeedSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sheetColor = Dp.surface.withValues(alpha: 0.94);
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: sheetColor,
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(18)),
-        border: Border.all(color: Dp.line),
+      decoration: const BoxDecoration(
+        color: Dp.canvas,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(Dp.rMd)),
+        border: Border(
+          top: BorderSide(color: Dp.hairline, width: 1.0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 20,
+            offset: Offset(0, -4),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -402,7 +485,7 @@ class _FeedSheet extends StatelessWidget {
           children: [
             _SheetHandle(),
             _SheetHeader(cc),
-            const HairDivider(color: Dp.line, thickness: double.infinity),
+            const HairDivider(color: Dp.hairline, thickness: double.infinity),
             const SizedBox(height: 4),
             for (var i = 0; i < cc.incidents.length; i++)
               _Delayed(
@@ -423,13 +506,13 @@ class _SheetHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 22,
+      height: 24,
       alignment: Alignment.center,
       child: Container(
-        width: 34,
+        width: 36,
         height: 4,
         decoration: BoxDecoration(
-          color: Dp.fog.withValues(alpha: 0.5),
+          color: Dp.hairline,
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -445,30 +528,43 @@ class _SheetHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final latest = cc.latest;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 2, 14, 10),
+      padding: const EdgeInsets.fromLTRB(18, 4, 18, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Drishti.icon(DGlyph.feed, size: 14, color: Dp.mist),
+              Drishti.icon(DGlyph.feed, size: 15, color: Dp.ink),
               const SizedBox(width: 8),
-              const Text('OPS FEED',
-                  style: TextStyle(
-                      fontFamily: AppText.mono,
-                      fontSize: 10,
-                      letterSpacing: 1.6,
-                      color: Dp.mist,
-                      fontWeight: FontWeight.w600)),
+              const Text(
+                'OPS FEED',
+                style: TextStyle(
+                  fontFamily: AppText.mono,
+                  fontSize: 11,
+                  letterSpacing: 1.2,
+                  color: Dp.ink,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const Spacer(),
               const LivePill(dense: true, label: 'STREAMING'),
               const SizedBox(width: 8),
-              Text('${cc.total}',
-                  style: AppText.dataStrong.copyWith(color: Dp.ink)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Dp.canvasSoft,
+                  borderRadius: BorderRadius.circular(Dp.rFull),
+                  border: Border.all(color: Dp.hairline),
+                ),
+                child: Text(
+                  '${cc.total}',
+                  style: AppText.dataStrong.copyWith(color: Dp.ink, fontSize: 11),
+                ),
+              ),
             ],
           ),
           if (latest != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             _LatestStrip(event: latest),
           ],
         ],
@@ -485,16 +581,16 @@ class _LatestStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final col = Dp.severityColor(event.severity);
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: col.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: col.withValues(alpha: 0.35)),
+        color: Dp.canvasSoft,
+        borderRadius: BorderRadius.circular(Dp.rSm),
+        border: Border.all(color: Dp.hairline),
       ),
       child: Row(
         children: [
           SeverityTag(event.severity, size: 9.5),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -505,33 +601,43 @@ class _LatestStrip extends StatelessWidget {
                       child: Text(
                         event.kind.label.toUpperCase(),
                         style: AppText.dataStrong.copyWith(
-                            color: Dp.ink, fontSize: 12),
+                          color: Dp.ink,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(event.confLabel,
-                        style: monoTxt(10,
-                            color: col, w: FontWeight.w700, ls: 0.3)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: col.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(Dp.rFull),
+                      ),
+                      child: Text(
+                        event.confLabel,
+                        style: monoTxt(9.5, color: col, w: FontWeight.w700, ls: 0.3),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 4),
                 Text(
                   '${event.busId} · ${event.timeLabel} · ${event.gpsLabel}',
-                  style: AppText.dataTiny.copyWith(color: Dp.mist),
+                  style: AppText.dataTiny.copyWith(color: Dp.textMuted),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 6),
-          Drishti.icon(DGlyph.chevronRight, size: 14, color: Dp.fog),
+          Drishti.icon(DGlyph.chevronRight, size: 14, color: Dp.textFaint),
         ],
       ),
     );
   }
 }
 
-/// Enters with the designed slide/fade, staggered by list order.
 class _Delayed extends StatelessWidget {
   const _Delayed({required this.order, required this.child});
   final int order;
@@ -541,17 +647,11 @@ class _Delayed extends StatelessWidget {
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: Mo.standard + Duration(milliseconds: (order % 6) * 40),
+      duration: Mo.standard + Duration(milliseconds: (order % 6) * 30),
       curve: Mo.easeOutTech,
       builder: (context, t, child) => Opacity(
         opacity: t.clamp(0, 1),
-        child: Transform.translate(
-          offset: Offset(-(1 - t) * 22, (1 - t) * 10),
-          child: Transform.scale(
-            scale: 0.97 + t * 0.03,
-            child: child,
-          ),
-        ),
+        child: child,
       ),
       child: child,
     );
@@ -569,52 +669,81 @@ class _FeedRow extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 7, 14, 7),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Dp.canvas,
+          borderRadius: BorderRadius.circular(Dp.rSm),
+          border: Border.all(color: Dp.hairlineSoft),
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(
-              width: 24,
-              child: Drishti.icon(_glyphFor(event.kind),
-                  size: 16, color: col.withValues(alpha: 0.9)),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(event.kind.label.toUpperCase(),
-                        style: AppText.dataStrong.copyWith(
-                            fontSize: 12, color: Dp.ink)),
-                    const SizedBox(width: 8),
-                    SeverityTag(event.severity, size: 8.5),
-                  ],
-                ),
-                const SizedBox(height: 3),
-Text(
-                  '${event.busId} · ${event.timeLabel} · ${event.confLabel}'
-                  '${event.plate != null ? ' · ${event.plate}' : ''}',
-                  style: AppText.dataTiny.copyWith(color: Dp.mist),
-                ),
-              ],
-            ),
-            const Spacer(),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: Dp.canvasSoft,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Dp.hairline),
+              ),
+              alignment: Alignment.center,
+              child: Drishti.icon(
+                _glyphFor(event.kind),
+                size: 17,
+                color: col,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        event.kind.label.toUpperCase(),
+                        style: AppText.dataStrong.copyWith(
+                          fontSize: 12,
+                          color: Dp.ink,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SeverityTag(event.severity, size: 8.5),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${event.busId} · ${event.timeLabel} · ${event.confLabel}'
+                    '${event.plate != null ? ' · ${event.plate}' : ''}',
+                    style: AppText.dataTiny.copyWith(color: Dp.textMuted),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: event.ageMinutes < 2
-                    ? Dp.signal.withValues(alpha: 0.12)
-                    : Dp.raised2,
-                borderRadius: BorderRadius.circular(6),
+                    ? Dp.accent.withValues(alpha: 0.1)
+                    : Dp.canvasSoft,
+                borderRadius: BorderRadius.circular(Dp.rFull),
+                border: Border.all(
+                  color: event.ageMinutes < 2
+                      ? Dp.accent.withValues(alpha: 0.3)
+                      : Dp.hairline,
+                ),
               ),
               child: Text(
                 event.ageMinutes < 2 ? 'NEW' : event.timeShort,
-                style: monoTxt(8.5,
-                    color: event.ageMinutes < 2 ? Dp.signal : Dp.fog,
-                    w: FontWeight.w700,
-                    ls: 0.5),
+                style: monoTxt(
+                  8.5,
+                  color: event.ageMinutes < 2 ? Dp.accent : Dp.textMuted,
+                  w: FontWeight.w700,
+                  ls: 0.4,
+                ),
               ),
             ),
           ],

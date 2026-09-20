@@ -6,9 +6,7 @@ import '../app/palette.dart';
 import '../app/typography.dart';
 import 'glyphs.dart';
 
-/// A directional slide/fade that plays when the active tab changes — the
-/// shell's deliberate substitute for default bottom-nav transitions. The tab
-/// body itself is kept mounted (IndexedStack) so map state survives.
+/// A directional slide/fade that plays when the active tab changes.
 class TabMotion extends StatefulWidget {
   const TabMotion({super.key, required this.index, required this.child});
   final int index;
@@ -50,7 +48,7 @@ class _TabMotionState extends State<TabMotion>
       builder: (context, child) {
         final t = Mo.easeOutTech.transform(_c.value);
         return Transform.translate(
-          offset: Offset(dir * (1 - t) * 26, 0),
+          offset: Offset(dir * (1 - t) * 20, 0),
           child: Opacity(opacity: t.clamp(0.2, 1.0), child: child),
         );
       },
@@ -78,8 +76,6 @@ class DrishtiDock extends StatelessWidget {
   final List<DockTab> tabs;
   final int index;
   final ValueChanged<int> onSelect;
-
-  /// Small signal dot shown over the first tab when live.
   final bool badge;
 
   @override
@@ -92,12 +88,12 @@ class DrishtiDock extends StatelessWidget {
       height: Tok.dockHeight + bottomPad,
       padding: EdgeInsets.only(bottom: bottomPad),
       decoration: const BoxDecoration(
-        color: Dp.surface,
-        border: Border(top: BorderSide(color: Dp.line)),
+        color: Dp.canvas,
+        border: Border(top: BorderSide(color: Dp.hairline, width: 1.0)),
       ),
       child: Stack(
         children: [
-          // Sliding active thumb
+          // Sliding active thumb with Mobbin stadium pill geometry
           AnimatedAlign(
             alignment: Alignment((index * 2 / (tabs.length - 1)) - 1, 0),
             duration: Mo.standard,
@@ -105,11 +101,11 @@ class DrishtiDock extends StatelessWidget {
             child: FractionallySizedBox(
               widthFactor: 1 / tabs.length,
               child: Container(
-                margin: const EdgeInsets.all(6),
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Dp.signal.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Dp.signal.withValues(alpha: 0.22)),
+                  color: Dp.canvasSoft,
+                  borderRadius: BorderRadius.circular(Dp.rFull),
+                  border: Border.all(color: Dp.hairline, width: 1.0),
                 ),
               ),
             ),
@@ -153,7 +149,7 @@ class _DockItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? Dp.signal : Dp.fog;
+    final color = active ? Dp.ink : Dp.textMuted;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -174,32 +170,36 @@ class _DockItem extends StatelessWidget {
                     height: 1,
                     letterSpacing: 0.4,
                   ),
-                  child: Drishti.icon(tab.glyph,
-                      size: active ? 21 : 19, color: color),
+                  child: Drishti.icon(
+                    tab.glyph,
+                    size: active ? 20 : 18,
+                    color: color,
+                    stroke: active ? 2.0 : 1.6,
+                  ),
                 ),
                 if (badge)
                   Positioned(
-                    top: -1,
+                    top: -2,
                     right: -7,
                     child: Container(
                       width: 6,
                       height: 6,
                       decoration: const BoxDecoration(
-                        color: Dp.signal,
+                        color: Dp.accent,
                         shape: BoxShape.circle,
                       ),
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 5),
             Text(
               tab.label,
               style: monoTxt(
-                active ? 9 : 8,
-                color: active ? Dp.signal : Dp.fog,
+                active ? 9.5 : 8.5,
+                color: color,
                 w: active ? FontWeight.w700 : FontWeight.w500,
-                ls: 1.3,
+                ls: 1.2,
               ),
             ),
           ],

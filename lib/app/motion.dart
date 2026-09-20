@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Shared motion system for the whole product.
 ///
 /// One palette of durations, one hand-tuned curve family. Every animation in
-/// the app must resolve to one of these so the motion feels like a single hand.
+/// the app resolves to one of these so motion feels fluid, premium, and unified.
 class Mo {
   Mo._();
 
@@ -24,16 +24,23 @@ class Mo {
   static const Duration radarSweep = Duration(milliseconds: 2600);
 }
 
-/// Component design tokens shared across screens.
+/// Component design tokens shared across screens, directly derived from DESIGN-mobbin.md.
 class Tok {
   Tok._();
 
-  static const double cornerPanel = 14;
-  static const double cornerWell = 8;
-  static const double hair = 1; // 1px hairlines
+  // Mobbin Corner Radii
+  static const double rNone = 0;
+  static const double rSm = 16;
+  static const double rMd = 24;
+  static const double rFull = 9999;
+
+  // Aliases for compatibility
+  static const double cornerPanel = rMd;
+  static const double cornerWell = rSm;
+  static const double hair = 1; // 1px hairline borders
   static const double dockHeight = 64;
-  static const double feedSnapMin = 0.15;
-  static const double feedSnapMax = 0.64;
+  static const double feedSnapMin = 0.16;
+  static const double feedSnapMax = 0.65;
 
   static const Duration feedHapticCooldown = Mo.slow;
 }

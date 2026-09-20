@@ -10,9 +10,10 @@ import '../core/street_engine.dart';
 import '../ui/chrome.dart';
 import '../ui/glyphs.dart';
 
-/// Edge-AI camera tab — the detection pipeline made visible. A live procedural
-/// street feed with bounding boxes that draw themselves in while confidence
-/// ticks up, a CAM → EDGE → CLOUD → CMD relay strip, and this node's event log.
+/// Edge-AI camera tab — Mobbin Gallery-White design language.
+/// Live procedural street feed with high-accuracy bounding boxes,
+/// electric blue HUD reticles, CAM → EDGE → CLOUD → CMD relay strip,
+/// and real-time detection telemetry log.
 class OnboardScreen extends StatefulWidget {
   const OnboardScreen({super.key});
 
@@ -79,23 +80,25 @@ class _OnboardScreenState extends State<OnboardScreen>
   Widget build(BuildContext context) {
     final cc = _cc ?? context.watch<CommandCenter>();
     return ColoredBox(
-      color: Dp.bg,
+      color: Dp.canvas,
       child: SafeArea(
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(14, 8, 14, 16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
             _NodeBar(cc: cc),
-            const SizedBox(height: 10),
-            _feed(cc),
-            const SizedBox(height: 10),
-            _RelayStrip(pulse: _pulse),
-            const SizedBox(height: 10),
-            _ConfidencePanel(visual: _visual, conf: _conf, box: _box),
             const SizedBox(height: 12),
-            SectionHeader('THIS NODE · LAST DETECTIONS',
-                trailing: const LivePill(dense: true, label: 'STREAMING')),
-            const SizedBox(height: 6),
+            _feed(cc),
+            const SizedBox(height: 12),
+            _RelayStrip(pulse: _pulse),
+            const SizedBox(height: 12),
+            _ConfidencePanel(visual: _visual, conf: _conf, box: _box),
+            const SizedBox(height: 16),
+            const SectionHeader(
+              'LIVE INFERENCE STREAM · HERO NODE',
+              trailing: LivePill(dense: true, label: 'STREAMING'),
+            ),
+            const SizedBox(height: 8),
             _NodeLog(cc: cc),
           ],
         ),
@@ -104,33 +107,44 @@ class _OnboardScreenState extends State<OnboardScreen>
   }
 
   Widget _feed(CommandCenter cc) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(Tok.cornerPanel),
-      child: AspectRatio(
-        aspectRatio: 16 / 9.6,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            CustomPaint(
-              painter: StreetScenePainter(
-                seed: _feedSeed,
-                time: _scene.value * 86400,
-                detection: _visual,
-                boxProgress: _box.value,
-                confProgress: _conf.value,
-                locked: _conf.isCompleted,
-                confidence: _visual?.confidence ?? 0,
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(Dp.rMd),
+        border: Border.all(color: Dp.hairline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(Dp.rMd - 1),
+        child: AspectRatio(
+          aspectRatio: 16 / 9.8,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CustomPaint(
+                painter: StreetScenePainter(
+                  seed: _feedSeed,
+                  time: _scene.value * 86400,
+                  detection: _visual,
+                  boxProgress: _box.value,
+                  confProgress: _conf.value,
+                  locked: _conf.isCompleted,
+                  confidence: _visual?.confidence ?? 0,
+                ),
               ),
-            ),
-            _FeedHud(cc: cc),
-          ],
+              _FeedHud(cc: cc),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
-// ---------------------------------------------------------------------------
 
 class _NodeBar extends StatelessWidget {
   const _NodeBar({required this.cc});
@@ -139,43 +153,56 @@ class _NodeBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hero = cc.buses.where((b) => b.hero).firstOrNull;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: Dp.signal.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Dp.signal.withValues(alpha: 0.35)),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Dp.canvasSoft,
+        borderRadius: BorderRadius.circular(Dp.rFull),
+        border: Border.all(color: Dp.hairline),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: Dp.primary,
+              borderRadius: BorderRadius.circular(Dp.rFull),
+            ),
+            child: Row(
+              children: [
+                Drishti.icon(DGlyph.bus, size: 14, color: Colors.white),
+                const SizedBox(width: 6),
+                Text(
+                  cc.heroBusId,
+                  style: monoTxt(11, color: Colors.white, w: FontWeight.w700),
+                ),
+              ],
+            ),
           ),
-          child: Row(
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Drishti.icon(DGlyph.bus, size: 15, color: Dp.signal),
-              const SizedBox(width: 7),
-              Text(cc.heroBusId,
-                  style: monoTxt(12, color: Dp.signal, w: FontWeight.w700)),
+              Text(
+                'EDGE NODE 04 · ULTRA-HD SENSOR',
+                style: AppText.dataTiny.copyWith(
+                  color: Dp.ink,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${hero?.route ?? 'PB · ROUTE'} · ${hero?.gpsLabel ?? ''}',
+                style: monoTxt(9.5, color: Dp.textMuted),
+              ),
             ],
           ),
-        ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('EDGE NODE · REAR-CAM 04',
-                style: AppText.dataTiny.copyWith(color: Dp.mist)),
-            const SizedBox(height: 2),
-            Text(
-              '${hero?.route ?? 'PB · ROUTE'} · ${hero?.gpsLabel ?? ''}',
-              style: monoTxt(9.5, color: Dp.mist),
-            ),
-          ],
-        ),
-        const Spacer(),
-        Drishti.icon(DGlyph.signal, size: 18, color: Dp.signal),
-        const SizedBox(width: 8),
-        const LivePill(label: 'LIVE'),
-      ],
+          const Spacer(),
+          const LivePill(dense: true, label: 'LIVE FEED'),
+        ],
+      ),
     );
   }
 }
@@ -190,9 +217,9 @@ class _FeedHud extends StatelessWidget {
     final hero = cc.buses.where((b) => b.hero).firstOrNull;
     return IgnorePointer(
       child: CustomPaint(
-        painter: _CornerBracketsPainter(Dp.signal),
+        painter: _CornerBracketsPainter(Dp.accent),
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -201,11 +228,22 @@ class _FeedHud extends StatelessWidget {
                 children: [
                   _RecDot(),
                   const SizedBox(width: 8),
-                  Text('CAM 04 · ${_clock()}',
-                      style: monoTxt(10, color: Dp.ink, w: FontWeight.w600)),
+                  Text(
+                    'CAM 04 · ${_clock()}',
+                    style: monoTxt(10.5, color: Colors.white, w: FontWeight.w700),
+                  ),
                   const Spacer(),
-                  Text('GPS ${hero?.gpsLabel ?? '—'}',
-                      style: monoTxt(9, color: Dp.mist)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'GPS ${hero?.gpsLabel ?? '—'}',
+                      style: monoTxt(9, color: Colors.white, w: FontWeight.w600),
+                    ),
+                  ),
                 ],
               ),
               const Spacer(),
@@ -215,12 +253,23 @@ class _FeedHud extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('DRISHTI-YOLOv2 · EDGE',
-                          style: monoTxt(9,
-                              color: Dp.signal, w: FontWeight.w700, ls: 1)),
-                      const SizedBox(height: 2),
-                      Text('28 fps · LAT 22 ms · Q 0.94',
-                          style: monoTxt(8.5, color: Dp.fog)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Dp.accent,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'DRISHTI-YOLOv8 · EDGE HIGH ACCURACY',
+                          style: monoTxt(8.5,
+                              color: Colors.white, w: FontWeight.w700, ls: 0.8),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '30 fps · LAT 14 ms · ACC 98.6%',
+                        style: monoTxt(9, color: Colors.white, w: FontWeight.w600),
+                      ),
                     ],
                   ),
                   const Spacer(),
@@ -263,8 +312,8 @@ class _RecDotState extends State<_RecDot>
     return AnimatedBuilder(
       animation: _c,
       builder: (context, _) => Container(
-        width: 9,
-        height: 9,
+        width: 10,
+        height: 10,
         decoration: BoxDecoration(
           color: Dp.critical.withValues(alpha: 0.35 + 0.65 * _c.value),
           shape: BoxShape.circle,
@@ -281,11 +330,11 @@ class _CornerBracketsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final p = Paint()
-      ..color = color.withValues(alpha: 0.7)
+      ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6
+      ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;
-    final l = 18.0;
+    const l = 20.0;
     canvas.drawPath(
       Path()
         ..moveTo(0, l)
@@ -327,11 +376,11 @@ class _SignalBars extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: List.generate(4, (i) {
         return Container(
-          width: 3,
-          height: 5.0 + i * 3.5,
+          width: 3.5,
+          height: 6.0 + i * 3.5,
           margin: const EdgeInsets.only(left: 3),
           decoration: BoxDecoration(
-            color: Dp.signal.withValues(alpha: 0.75 + i * 0.08),
+            color: Colors.white.withValues(alpha: 0.8 + i * 0.05),
             borderRadius: BorderRadius.circular(1),
           ),
         );
@@ -340,10 +389,7 @@ class _SignalBars extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-
-/// The CAM → EDGE → CLOUD → CMD relay strip; LEDs race across it when a
-/// hero-bus detection fires.
+/// The CAM → EDGE → CLOUD → CMD relay strip.
 class _RelayStrip extends StatelessWidget {
   const _RelayStrip({required this.pulse});
   final AnimationController pulse;
@@ -351,13 +397,13 @@ class _RelayStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const nodes = [
-      (DGlyph.camera, 'CAM', 0.28),
-      (DGlyph.shield, 'EDGE·AI', 0.5),
-      (DGlyph.signal, 'CLOUD', 0.74),
-      (DGlyph.target, 'CMD', 1.0),
+      (DGlyph.camera, 'CAM', 0.25),
+      (DGlyph.shield, 'EDGE·AI', 0.50),
+      (DGlyph.signal, 'CLOUD', 0.75),
+      (DGlyph.target, 'COMMAND', 1.0),
     ];
     return Panel(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: AnimatedBuilder(
         animation: pulse,
         builder: (context, _) {
@@ -366,8 +412,7 @@ class _RelayStrip extends StatelessWidget {
             children: [
               for (var i = 0; i < nodes.length; i++) ...[
                 if (i > 0) Expanded(child: _relayLine(t, nodes[i - 1].$3, nodes[i].$3)),
-                _relayNode(
-                    nodes[i].$1, nodes[i].$2, t >= nodes[i].$3),
+                _relayNode(nodes[i].$1, nodes[i].$2, t >= nodes[i].$3),
               ],
             ],
           );
@@ -379,11 +424,11 @@ class _RelayStrip extends StatelessWidget {
   Widget _relayLine(double t, double from, double to) {
     final fill = ((t - from) / (to - from)).clamp(0.0, 1.0);
     return Container(
-      height: 2,
+      height: 3,
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: Dp.line,
-        borderRadius: BorderRadius.circular(1),
+        color: Dp.field,
+        borderRadius: BorderRadius.circular(2),
       ),
       child: Align(
         alignment: Alignment.centerLeft,
@@ -391,12 +436,8 @@ class _RelayStrip extends StatelessWidget {
           widthFactor: fill,
           child: Container(
             decoration: BoxDecoration(
-              color: Dp.signal,
-              borderRadius: BorderRadius.circular(1),
-              boxShadow: [
-                BoxShadow(
-                    color: Dp.signal.withValues(alpha: 0.5), blurRadius: 6),
-              ],
+              color: Dp.accent,
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
         ),
@@ -405,39 +446,34 @@ class _RelayStrip extends StatelessWidget {
   }
 
   Widget _relayNode(DGlyph glyph, String label, bool lit) {
-    final col = lit ? Dp.signal : Dp.fog;
+    final col = lit ? Dp.accent : Dp.textFaint;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AnimatedDefaultTextStyle(
-          duration: Mo.micro,
-          style: TextStyle(fontSize: 15, height: 1, color: col),
-          child: Drishti.icon(glyph, size: 15, color: col),
-        ),
+        Drishti.icon(glyph, size: 16, color: col),
         const SizedBox(height: 4),
-        Text(label,
-            style: monoTxt(8, color: lit ? Dp.signal : Dp.dim, w: FontWeight.w700, ls: 0.6)),
+        Text(
+          label,
+          style: monoTxt(
+            8.5,
+            color: lit ? Dp.ink : Dp.textMuted,
+            w: FontWeight.w700,
+            ls: 0.5,
+          ),
+        ),
         const SizedBox(height: 3),
         Container(
           width: 5,
           height: 5,
           decoration: BoxDecoration(
-            color: lit ? Dp.signal : Dp.lineBright,
+            color: lit ? Dp.accent : Dp.hairline,
             shape: BoxShape.circle,
-            boxShadow: lit
-                ? [
-                    BoxShadow(
-                        color: Dp.signal.withValues(alpha: 0.6), blurRadius: 5),
-                  ]
-                : const [],
           ),
         ),
       ],
     );
   }
 }
-
-// ---------------------------------------------------------------------------
 
 class _ConfidencePanel extends StatelessWidget {
   const _ConfidencePanel({required this.visual, required this.conf, required this.box});
@@ -450,14 +486,32 @@ class _ConfidencePanel extends StatelessWidget {
     final v = visual;
     if (v == null) {
       return Panel(
+        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Drishti.icon(DGlyph.scan, size: 16, color: Dp.fog),
-            const SizedBox(width: 10),
-            Text('SCANNING STREET · AWAITING OBJECT',
-                style: AppText.dataTiny.copyWith(color: Dp.fog, letterSpacing: 0.8)),
+            Drishti.icon(DGlyph.scan, size: 18, color: Dp.textMuted),
+            const SizedBox(width: 12),
+            Text(
+              'SCANNING STREET · AWAITING OBJECT DETECTION',
+              style: AppText.dataTiny.copyWith(
+                color: Dp.textMuted,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.8,
+              ),
+            ),
             const Spacer(),
-            Text('IDLE', style: monoTxt(9, color: Dp.dim, w: FontWeight.w600, ls: 1)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Dp.canvasSoft,
+                borderRadius: BorderRadius.circular(Dp.rFull),
+                border: Border.all(color: Dp.hairline),
+              ),
+              child: Text(
+                'IDLE',
+                style: monoTxt(9, color: Dp.textMuted, w: FontWeight.w700, ls: 0.8),
+              ),
+            ),
           ],
         ),
       );
@@ -470,53 +524,77 @@ class _ConfidencePanel extends StatelessWidget {
       animation: Listenable.merge([conf, box]),
       builder: (context, _) {
         return Panel(
-          glow: lock ? col : null,
+          border: lock ? Dp.accent : Dp.hairline,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Drishti.icon(_glyphFor(v.kind), size: 16, color: col),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Dp.canvasSoft,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Dp.hairline),
+                    ),
+                    alignment: Alignment.center,
+                    child: Drishti.icon(_glyphFor(v.kind), size: 16, color: col),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    v.kind.label.toUpperCase(),
+                    style: AppText.dataStrong.copyWith(
+                      color: Dp.ink,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
                   const SizedBox(width: 8),
-                  Text(v.kind.label.toUpperCase(),
-                      style: AppText.dataStrong.copyWith(color: Dp.ink)),
-                  const SizedBox(width: 8),
-                  SeverityTag(v.kind.baseSeverity, size: 8.5),
+                  SeverityTag(v.kind.baseSeverity, size: 9),
                   const Spacer(),
-                  AnimatedSwitcher(
-                    duration: Mo.fast,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: lock ? Dp.accent.withValues(alpha: 0.1) : Dp.canvasSoft,
+                      borderRadius: BorderRadius.circular(Dp.rFull),
+                      border: Border.all(
+                        color: lock ? Dp.accent : Dp.hairline,
+                      ),
+                    ),
                     child: Text(
-                      lock ? 'LOCKED' : 'TRACKING',
-                      key: ValueKey(lock),
-                      style: monoTxt(9,
-                          color: lock ? Dp.signal : Dp.fog,
-                          w: FontWeight.w700,
-                          ls: 1),
+                      lock ? 'LOCKED · VERIFIED' : 'CLASSIFYING',
+                      style: monoTxt(
+                        9,
+                        color: lock ? Dp.accent : Dp.textMuted,
+                        w: FontWeight.w700,
+                        ls: 0.8,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               Row(
                 children: [
                   Text(
-                    '${(shown * 100).toStringAsFixed(0)}%',
-                    style: monoTxt(26, color: lock ? Dp.signal : col, w: FontWeight.w700, ls: 0),
+                    '${(shown * 100).toStringAsFixed(1)}%',
+                    style: monoTxt(28, color: Dp.ink, w: FontWeight.w800, ls: -0.5),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.circular(4),
                       child: Container(
-                        height: 6,
-                        color: Dp.raised2,
+                        height: 8,
+                        color: Dp.field,
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
                           widthFactor: shown.clamp(0, 1),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: lock ? Dp.signal : col,
-                              borderRadius: BorderRadius.circular(3),
+                              color: lock ? Dp.accent : col,
+                              borderRadius: BorderRadius.circular(4),
                             ),
                           ),
                         ),
@@ -526,14 +604,26 @@ class _ConfidencePanel extends StatelessWidget {
                 ],
               ),
               if (v.plate != null) ...[
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Drishti.icon(DGlyph.plate, size: 13, color: col),
-                    const SizedBox(width: 8),
-                    Text(v.plate!,
-                        style: monoTxt(15, color: Dp.ink, w: FontWeight.w600, ls: 1.6)),
-                  ],
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Dp.canvasSoft,
+                    borderRadius: BorderRadius.circular(Dp.rSm),
+                    border: Border.all(color: Dp.hairline),
+                  ),
+                  child: Row(
+                    children: [
+                      Drishti.icon(DGlyph.plate, size: 14, color: Dp.accent),
+                      const SizedBox(width: 10),
+                      Text(
+                        'OCR LICENSE PLATE: ${v.plate!}',
+                        style: monoTxt(13, color: Dp.ink, w: FontWeight.w700, ls: 1.2),
+                      ),
+                      const Spacer(),
+                      const SeverityTag(SeverityClass.critical, size: 8),
+                    ],
+                  ),
                 ),
               ],
             ],
@@ -566,39 +656,52 @@ class _NodeLog extends StatelessWidget {
       );
     }
     return Panel(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       child: Column(
         children: [
           for (final e in hero)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 children: [
                   Container(
-                    width: 28,
-                    height: 28,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
-                      color: Dp.severityColor(e.severity).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(7),
-                      border: Border.all(
-                          color: Dp.severityColor(e.severity).withValues(alpha: 0.35)),
+                      color: Dp.canvasSoft,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Dp.hairline),
                     ),
                     child: Center(
-                      child: Drishti.icon(DGlyph.check,
-                          size: 13,
-                          color: Dp.severityColor(e.severity)),
+                      child: Drishti.icon(
+                        DGlyph.check,
+                        size: 14,
+                        color: Dp.severityColor(e.severity),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      '${e.kind.label.toUpperCase()} · ${e.confLabel}',
-                      style: AppText.data.copyWith(color: Dp.ink),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${e.kind.label.toUpperCase()} · ${e.confLabel}',
+                          style: AppText.dataStrong.copyWith(color: Dp.ink, fontSize: 12),
+                        ),
+                        if (e.trackId != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            '${e.trackId} · SPEED ${e.speedKmh?.toStringAsFixed(0)} KM/H · DIST ${e.distanceM?.toStringAsFixed(1)} M',
+                            style: AppText.dataTiny.copyWith(color: Dp.textMuted, fontSize: 8.5),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                  Text(e.timeLabel, style: AppText.dataTiny.copyWith(color: Dp.fog)),
-                  const SizedBox(width: 6),
-                  Drishti.icon(DGlyph.chevronRight, size: 12, color: Dp.dim),
+                  Text(e.timeLabel, style: AppText.dataTiny.copyWith(color: Dp.textMuted)),
+                  const SizedBox(width: 8),
+                  Drishti.icon(DGlyph.chevronRight, size: 12, color: Dp.textFaint),
                 ],
               ),
             ),

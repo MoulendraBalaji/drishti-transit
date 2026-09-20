@@ -1,39 +1,63 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
-/// Drishti palette — deep night-map ink with one signal accent, and a
-/// restrained amber-to-red alert scale. No pure black, no pure white.
+/// Drishti Palette — Crafted exactly according to Mobbin's design system:
+/// A gallery-white, monochrome interface system built to disappear behind the
+/// content it curates. Near-black ink (#141414) on pure white canvas (#FFFFFF),
+/// a subtle ladder of barely-there neutral tints (#F3F3F3, #F0F0F0) and crisp
+/// hairline borders (#E0E0E0), stadium-pill controls (9999px), 24px card geometry,
+/// 30% squircle icons, and an electric blue accent (#0066FF) reserved for active
+/// signals and live telemetry.
 class Dp {
   Dp._();
 
-  // Ink / surfaces (deep night navy, never pure black)
-  static const Color bg = Color(0xFF070B14); // map void / app background
-  static const Color surface = Color(0xFF0B1323); // panels
-  static const Color raised = Color(0xFF111C30); // raised cards
-  static const Color raised2 = Color(0xFF17243C); // chips / inputs / wells
-  static const Color line = Color(0xFF1D2A44); // hairlines
-  static const Color lineBright = Color(0xFF2C3D5F); // strong hairlines
+  // Mobbin Canvas & Neutral ladder
+  static const Color canvas = Color(0xFFFFFFFF);
+  static const Color canvasSoft = Color(0xFFF3F3F3);
+  static const Color field = Color(0xFFF0F0F0);
+  static const Color hairline = Color(0xFFE0E0E0);
+  static const Color hairlineSoft = Color(0xFFF0F0F0);
 
-  // Text
-  static const Color ink = Color(0xFFE9EEF8); // primary text (off-white)
-  static const Color mist = Color(0xFF96A5C0); // secondary text
-  static const Color fog = Color(0xFF5D6D8A); // disabled / hints
-  static const Color dim = Color(0xFF3A4760); // very quiet
+  // Surface aliases for backward compatibility
+  static const Color bg = canvas;
+  static const Color surface = canvas;
+  static const Color raised = canvasSoft;
+  static const Color raised2 = field;
+  static const Color line = hairline;
+  static const Color lineBright = Color(0xFFCCCCCC);
 
-  // Signal accent — "system alive" state (live pill, active nav, locked trusts)
-  static const Color signal = Color(0xFF34E2B4);
-  static const Color signalDim = Color(0xFF15A37F);
-  static const Color onSignal = Color(0xFF04201A);
+  // Mobbin Inks & Typography colors
+  static const Color primary = Color(0xFF141414);
+  static const Color onPrimary = Color(0xFFFFFFFF);
+  static const Color ink = Color(0xFF141414);
+  static const Color inkSoft = Color(0xFF262626);
+  static const Color textMuted = Color(0xFF707070);
+  static const Color textFaint = Color(0xFFADADAD);
 
-  // Brand restraint — a single saffron note for the wordmark in quiet moments.
-  static const Color saffron = Color(0xFFE9A23B);
+  // Text aliases
+  static const Color mist = textMuted;
+  static const Color fog = textFaint;
+  static const Color dim = Color(0xFFD4D4D4);
 
-  // Alert severity scale (cyan note -> amber -> orange -> red)
-  static const Color note = Color(0xFF58B8F2);
-  static const Color watch = Color(0xFFF2C33D);
-  static const Color elevated = Color(0xFFF28B34);
-  static const Color critical = Color(0xFFF2504D);
+  // Electric Blue Accent (reserved for live state, active nav, primary CTAs)
+  static const Color accent = Color(0xFF0066FF);
+  static const Color signal = accent;
+  static const Color signalDim = Color(0xFF0052CC);
+  static const Color onSignal = Color(0xFFFFFFFF);
+
+  // Brand accent for highlights
+  static const Color saffron = Color(0xFF0066FF);
+
+  // Geometry tokens from DESIGN-mobbin.md
+  static const double rSm = 16.0;
+  static const double rMd = 24.0;
+  static const double rFull = 9999.0;
+
+  // Alert severity scale (high-contrast, crystal-clear detection)
+  static const Color note = Color(0xFF0066FF); // Blue note
+  static const Color watch = Color(0xFFE69500); // Amber watch
+  static const Color elevated = Color(0xFFE65C00); // Orange alert
+  static const Color critical = Color(0xFFD92D20); // Crimson critical
 
   static Color severityColor(SeverityClass s) {
     switch (s) {
@@ -49,13 +73,13 @@ class Dp {
   }
 
   static Color severitySoft(SeverityClass s) =>
-      severityColor(s).withValues(alpha: 0.14);
+      severityColor(s).withValues(alpha: 0.12);
 
-  static const Color vehicleColor = Color(0xFF86A0C8);
+  static const Color vehicleColor = Color(0xFF141414);
 
   // Heat layer ramp
-  static const Color heatLow = Color(0x0034E2B4);
-  static const Color heatHigh = Color(0xE6F2504D);
+  static const Color heatLow = Color(0x000066FF);
+  static const Color heatHigh = Color(0xE6D92D20);
 }
 
 /// Severity tier shared across models and the alert UI.

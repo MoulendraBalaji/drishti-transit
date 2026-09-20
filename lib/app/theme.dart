@@ -3,32 +3,40 @@ import 'package:flutter/material.dart';
 import 'palette.dart';
 import 'typography.dart';
 
-/// Builds the Drishti ThemeData — a command-center palette, our fonts wired
-/// into the text theme, and none of the default Material chrome.
+/// Builds the Drishti ThemeData according to DESIGN-mobbin.md:
+/// A gallery-white canvas, near-black ink, stadium-pill controls, and electric blue accent.
 ThemeData buildDrishtiTheme() {
   final base = ThemeData(
-    brightness: Brightness.dark,
+    brightness: Brightness.light,
     useMaterial3: true,
-    scaffoldBackgroundColor: Dp.bg,
+    scaffoldBackgroundColor: Dp.canvas,
     fontFamily: AppText.sans,
     splashFactory: InkSparkle.splashFactory,
-    colorScheme: const ColorScheme.dark(
-      primary: Dp.signal,
-      onPrimary: Dp.onSignal,
-      surface: Dp.surface,
+    colorScheme: const ColorScheme.light(
+      primary: Dp.primary,
+      onPrimary: Dp.onPrimary,
+      surface: Dp.canvas,
       onSurface: Dp.ink,
       error: Dp.critical,
-      onError: Color(0xFF2B0A0C),
+      onError: Colors.white,
     ),
     textSelectionTheme: const TextSelectionThemeData(
-      cursorColor: Dp.signal,
-      selectionColor: Color(0x4034E2B4),
-      selectionHandleColor: Dp.signal,
+      cursorColor: Dp.accent,
+      selectionColor: Color(0x330066FF),
+      selectionHandleColor: Dp.accent,
     ),
-    dividerColor: Dp.line,
+    dividerColor: Dp.hairline,
+    cardTheme: CardThemeData(
+      color: Dp.canvas,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Dp.rMd),
+        side: const BorderSide(color: Dp.hairline),
+      ),
+    ),
     splashColor: Colors.transparent,
     highlightColor: Colors.transparent,
-    hoverColor: Colors.transparent,
+    hoverColor: Dp.canvasSoft,
   );
 
   return base.copyWith(
@@ -39,8 +47,9 @@ ThemeData buildDrishtiTheme() {
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: Dp.signal,
+        foregroundColor: Dp.ink,
         textStyle: AppText.label,
+        shape: const StadiumBorder(),
       ),
     ),
   );
