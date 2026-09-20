@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 /// The full bespoke Drishti glyph set — hand-drawn line icons, one stroke
@@ -30,6 +31,8 @@ enum DGlyph {
   info,
   sun,
   moon,
+  settings,
+  sliders,
 }
 
 /// Renders a [DGlyph] as a crisp stroked glyph.
@@ -287,6 +290,26 @@ class _DrishtiGlyphPainter extends CustomPainter {
           ..cubicTo(s * 0.28, s * 0.88, s * 0.16, s * 0.44, s * 0.50, s * 0.14)
           ..close();
         canvas.drawPath(p, paint);
+        break;
+      case DGlyph.settings:
+        circle(const Offset(0.5, 0.5), 0.20);
+        circle(const Offset(0.5, 0.5), 0.36);
+        for (var i = 0; i < 6; i++) {
+          final a = i * 3.1415926535 / 3;
+          final dx = 0.5 + 0.42 * 0.95 * cos(a);
+          final dy = 0.5 + 0.42 * 0.95 * sin(a);
+          final dxIn = 0.5 + 0.34 * cos(a);
+          final dyIn = 0.5 + 0.34 * sin(a);
+          line(Offset(dxIn, dyIn), Offset(dx, dy));
+        }
+        break;
+      case DGlyph.sliders:
+        line(const Offset(0.18, 0.14), const Offset(0.18, 0.86));
+        line(const Offset(0.50, 0.14), const Offset(0.50, 0.86));
+        line(const Offset(0.82, 0.14), const Offset(0.82, 0.86));
+        circle(const Offset(0.18, 0.36), 0.10);
+        circle(const Offset(0.50, 0.64), 0.10);
+        circle(const Offset(0.82, 0.42), 0.10);
         break;
     }
   }

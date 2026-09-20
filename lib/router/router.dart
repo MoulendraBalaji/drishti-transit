@@ -5,6 +5,7 @@ import '../screens/analytics_screen.dart';
 import '../screens/command_screen.dart';
 import '../screens/incident_detail_screen.dart';
 import '../screens/onboard_screen.dart';
+import '../screens/settings_screen.dart';
 import '../screens/shell.dart';
 import '../screens/splash_screen.dart';
 import '../ui/transitions.dart';
@@ -18,6 +19,7 @@ class AppRouter {
   static const String command = '/command';
   static const String edge = '/edge';
   static const String insight = '/insight';
+  static const String settings = '/settings';
   static const String incident = '/command/incident/:id';
 
   static GoRouter build({required GlobalKey<NavigatorState> rootNavKey}) {
@@ -30,6 +32,13 @@ class AppRouter {
           pageBuilder: (context, state) => DrishtiRoute(
             kind: RouteKind.iris,
             builder: (_) => const SplashScreen(),
+          ),
+        ),
+        GoRoute(
+          path: settings,
+          pageBuilder: (context, state) => DrishtiRoute(
+            kind: RouteKind.zoomIn,
+            builder: (_) => const SettingsScreen(),
           ),
         ),
         StatefulShellRoute.indexedStack(

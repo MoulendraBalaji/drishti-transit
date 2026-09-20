@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../core/command_center.dart';
 import '../router/router.dart';
+import 'palette.dart';
 import 'theme.dart';
 
 /// Drishti root widget — wires the single [CommandCenter] (the causal stream:
@@ -30,15 +31,23 @@ class _DrishtiAppState extends State<DrishtiApp> {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: widget.center,
-      child: Consumer<CommandCenter>(
-        builder: (context, cc, _) {
+      child: Selector<CommandCenter, ThemeMode>(
+        selector: (_, cc) => cc.themeMode,
+        builder: (context, themeMode, _) {
           return MaterialApp.router(
             title: 'Drishti',
             debugShowCheckedModeBanner: false,
             theme: buildDrishtiTheme(isDark: false),
             darkTheme: buildDrishtiTheme(isDark: true),
-            themeMode: cc.themeMode,
+            themeMode: themeMode,
+            themeAnimationDuration: const Duration(milliseconds: 300),
+            themeAnimationCurve: Curves.easeInOutCubic,
             routerConfig: _router,
+            builder: (context, child) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              Dp.isDark = isDark;
+              return child!;
+            },
           );
         },
       ),

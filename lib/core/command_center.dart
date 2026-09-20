@@ -29,20 +29,71 @@ class CommandCenter extends ChangeNotifier {
     }
   }
 
-  ThemeMode _themeMode = ThemeMode.dark;
+  ThemeMode _themeMode = ThemeMode.system;
   ThemeMode get themeMode => _themeMode;
-  bool get isDarkMode => _themeMode == ThemeMode.dark;
-
-  void toggleTheme() {
-    _themeMode = isDarkMode ? ThemeMode.light : ThemeMode.dark;
-    Dp.isDark = isDarkMode;
-    notifyListeners();
-  }
+  bool get isDarkMode => Dp.isDark;
 
   void setThemeMode(ThemeMode mode) {
     if (_themeMode == mode) return;
     _themeMode = mode;
-    Dp.isDark = isDarkMode;
+    if (mode == ThemeMode.dark) Dp.isDark = true;
+    if (mode == ThemeMode.light) Dp.isDark = false;
+    notifyListeners();
+  }
+
+  void toggleTheme() {
+    if (_themeMode == ThemeMode.system) {
+      setThemeMode(Dp.isDark ? ThemeMode.light : ThemeMode.dark);
+    } else {
+      setThemeMode(_themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark);
+    }
+  }
+
+  // Configurable System Settings
+  bool _showCorridors = true;
+  bool get showCorridors => _showCorridors;
+  void toggleCorridors() {
+    _showCorridors = !_showCorridors;
+    notifyListeners();
+  }
+
+  bool _showHeatmap = true;
+  bool get showHeatmap => _showHeatmap;
+  void toggleHeatmap() {
+    _showHeatmap = !_showHeatmap;
+    notifyListeners();
+  }
+
+  double _confidenceThreshold = 0.92;
+  double get confidenceThreshold => _confidenceThreshold;
+  void setConfidenceThreshold(double v) {
+    _confidenceThreshold = v;
+    notifyListeners();
+  }
+
+  bool _autoDispatch = true;
+  bool get autoDispatch => _autoDispatch;
+  void toggleAutoDispatch() {
+    _autoDispatch = !_autoDispatch;
+    notifyListeners();
+  }
+
+  bool _plateOcrEnabled = true;
+  bool get plateOcrEnabled => _plateOcrEnabled;
+  void togglePlateOcr() {
+    _plateOcrEnabled = !_plateOcrEnabled;
+    notifyListeners();
+  }
+
+  void clearTelemetryCache() {
+    _incidents.clear();
+    for (final k in DetectionKind.values) {
+      _kindCounts[k] = 0;
+    }
+    for (final s in SeverityClass.values) {
+      _severityCounts[s] = 0;
+    }
+    _seed();
     notifyListeners();
   }
 

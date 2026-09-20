@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -81,52 +83,99 @@ class DrishtiDock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
-    final itemW = w / tabs.length;
+    final double dockWidth = math.min(w - 32, 400);
     final bottomPad = MediaQuery.paddingOf(context).bottom;
 
-    return Container(
-      height: Tok.dockHeight + bottomPad,
-      padding: EdgeInsets.only(bottom: bottomPad),
-      decoration: BoxDecoration(
-        color: Dp.canvas,
-        border: Border(top: BorderSide(color: Dp.hairline, width: 1.0)),
-      ),
-      child: Stack(
-        children: [
-          // Sliding active thumb with Mobbin stadium pill geometry
-          AnimatedAlign(
-            alignment: Alignment((index * 2 / (tabs.length - 1)) - 1, 0),
-            duration: Mo.standard,
-            curve: Mo.easeInOutTech,
-            child: FractionallySizedBox(
-              widthFactor: 1 / tabs.length,
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Dp.canvasSoft,
-                  borderRadius: BorderRadius.circular(Dp.rFull),
-                  border: Border.all(color: Dp.hairline, width: 1.0),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: math.max(bottomPad, 12),
+        ),
+        child: Center(
+          child: SizedBox(
+            width: dockWidth,
+            height: 60,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(Dp.rFull),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: (Dp.isDark
+                            ? const Color(0xFF161B22)
+                            : Colors.white)
+                        .withValues(alpha: 0.88),
+                    borderRadius: BorderRadius.circular(Dp.rFull),
+                    border: Border.all(
+                      color: Dp.isDark
+                          ? const Color(0xFF38444D)
+                          : const Color(0xFFD8DEE4),
+                      width: 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(
+                            alpha: Dp.isDark ? 0.45 : 0.12),
+                        blurRadius: 24,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      // Sliding active thumb with Mobbin stadium pill geometry
+                      AnimatedAlign(
+                        alignment: Alignment((index * 2 / (tabs.length - 1)) - 1, 0),
+                        duration: Mo.standard,
+                        curve: Mo.easeInOutTech,
+                        child: FractionallySizedBox(
+                          widthFactor: 1 / tabs.length,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Dp.isDark
+                                  ? const Color(0xFF21262D)
+                                  : const Color(0xFFF0F2F5),
+                              borderRadius: BorderRadius.circular(Dp.rFull),
+                              border: Border.all(
+                                color: Dp.isDark
+                                    ? const Color(0xFF30363D)
+                                    : const Color(0xFFE2E4E8),
+                                width: 1.0,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          for (var i = 0; i < tabs.length; i++)
+                            Expanded(
+                              child: _DockItem(
+                                tab: tabs[i],
+                                active: i == index,
+                                badge: badge && i == 0,
+                                onTap: () {
+                                  if (i == index) return;
+                                  HapticFeedback.selectionClick();
+                                  onSelect(i);
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-          Row(
-            children: [
-              for (var i = 0; i < tabs.length; i++)
-                _DockItem(
-                  width: itemW,
-                  tab: tabs[i],
-                  active: i == index,
-                  badge: badge && i == 0,
-                  onTap: () {
-                    if (i == index) return;
-                    HapticFeedback.selectionClick();
-                    onSelect(i);
-                  },
-                ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -134,14 +183,12 @@ class DrishtiDock extends StatelessWidget {
 
 class _DockItem extends StatelessWidget {
   const _DockItem({
-    required this.width,
     required this.tab,
     required this.active,
     required this.badge,
     required this.onTap,
   });
 
-  final double width;
   final DockTab tab;
   final bool active;
   final bool badge;
@@ -153,8 +200,7 @@ class _DockItem extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: SizedBox(
-        width: width,
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

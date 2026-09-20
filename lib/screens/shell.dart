@@ -58,16 +58,21 @@ class _AppShellState extends State<AppShell>
   }
 
   Widget _buildMobileLayout(int idx) {
-    return Column(
+    return Stack(
       children: [
-        Expanded(
+        Positioned.fill(
           child: TabMotion(index: idx, child: widget.shell),
         ),
-        DrishtiDock(
-          tabs: _tabs,
-          index: idx,
-          onSelect: _select,
-          badge: true,
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: DrishtiDock(
+            tabs: _tabs,
+            index: idx,
+            onSelect: _select,
+            badge: true,
+          ),
         ),
       ],
     );
@@ -93,20 +98,32 @@ class _AppShellState extends State<AppShell>
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
                 child: Row(
                   children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: Dp.primary,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'D',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        context.push('/settings');
+                      },
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        clipBehavior: Clip.antiAlias,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Dp.hairline, width: 1.2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Image.asset(
+                          'assets/images/dristhi.jpeg',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Center(
+                            child: Drishti.icon(DGlyph.bus, size: 20, color: Dp.accent),
+                          ),
                         ),
                       ),
                     ),
@@ -301,10 +318,10 @@ class _AppShellState extends State<AppShell>
                     GestureDetector(
                       onTap: () {
                         HapticFeedback.selectionClick();
-                        cc.toggleTheme();
+                        context.push('/settings');
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: Dp.canvasSoft,
                           borderRadius: BorderRadius.circular(Dp.rFull),
@@ -314,13 +331,13 @@ class _AppShellState extends State<AppShell>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Drishti.icon(
-                              cc.isDarkMode ? DGlyph.sun : DGlyph.moon,
+                              DGlyph.settings,
                               size: 13,
                               color: Dp.ink,
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              cc.isDarkMode ? 'LIGHT' : 'DARK',
+                              'SETTINGS',
                               style: monoTxt(9, color: Dp.ink, w: FontWeight.w700, ls: 0.8),
                             ),
                           ],

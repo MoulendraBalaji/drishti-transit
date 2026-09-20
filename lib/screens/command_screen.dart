@@ -29,8 +29,6 @@ class CommandScreen extends StatefulWidget {
 
 class _CommandScreenState extends State<CommandScreen> {
   final MapController _map = MapController();
-  bool _heat = true;
-  bool _routes = true;
   String? _lastAlertId;
 
   void _onAlertChanged(CommandCenter cc) {
@@ -50,8 +48,6 @@ class _CommandScreenState extends State<CommandScreen> {
       child: Stack(
         children: [
           _mapView(cc),
-          _topHud(cc),
-          _rightControls(),
           Positioned.fill(
             child: DraggableScrollableSheet(
               initialChildSize: Tok.feedSnapMin,
@@ -66,7 +62,9 @@ class _CommandScreenState extends State<CommandScreen> {
               ),
             ),
           ),
-          const Positioned(left: 14, bottom: 8, child: _MapAttribution()),
+          _topHud(cc),
+          _rightControls(cc),
+          const Positioned(left: 14, bottom: 84, child: _MapAttribution()),
         ],
       ),
     );
@@ -92,16 +90,23 @@ class _CommandScreenState extends State<CommandScreen> {
         backgroundColor: Dp.canvasSoft,
       ),
       children: [
-        // Dynamic Carto Voyager (light) and Carto DarkMatter (dark) for clear detection visibility
+        // Smooth Carto Voyager (light) base layer with caching
         TileLayer(
-          urlTemplate: cc.isDarkMode
-              ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-              : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+          key: const ValueKey('carto_voyager'),
+          urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
           subdomains: const ['a', 'b', 'c', 'd'],
           userAgentPackageName: 'in.drishti.transit',
           maxZoom: 19,
         ),
-        if (_routes)
+        if (cc.isDarkMode)
+          TileLayer(
+            key: const ValueKey('carto_dark'),
+            urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+            subdomains: const ['a', 'b', 'c', 'd'],
+            userAgentPackageName: 'in.drishti.transit',
+            maxZoom: 19,
+          ),
+        if (cc.showCorridors)
           PolylineLayer(
             polylines: [
               for (var i = 0; i < corridors.length; i++)
@@ -149,7 +154,7 @@ class _CommandScreenState extends State<CommandScreen> {
               ),
           ],
         ),
-        if (_heat) HeatOverlay(points: cc.heatPoints),
+        if (cc.showHeatmap) HeatOverlay(points: cc.heatPoints),
         RippleLayer(ripples: cc.ripples),
       ],
     );
@@ -179,73 +184,81 @@ class _CommandScreenState extends State<CommandScreen> {
               ),
               child: Row(
                 children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: Dp.primary,
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Text(
-                      'D',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13,
+                  Expanded(
+                    child: GestureDetector(
+                      key: const ValueKey('command_settings_button'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        context.push('/settings');
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            clipBehavior: Clip.antiAlias,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Dp.hairline, width: 1.2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.12),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Image.asset(
+                              'assets/images/dristhi.jpeg',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Drishti.icon(DGlyph.bus, size: 16),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'DRISHTI',
+                                      style: AppText.label.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 13,
+                                        letterSpacing: 0.8,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Drishti.icon(DGlyph.settings, size: 11, color: Dp.textFaint),
+                                  ],
+                                ),
+                                Text(
+                                  'LIVE OPERATIONS',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppText.dataTiny.copyWith(
+                                    color: Dp.textMuted,
+                                    fontSize: 8.5,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'DRISHTI',
-                        style: AppText.label.copyWith(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      Text(
-                        'LIVE OPERATIONS',
-                        style: AppText.dataTiny.copyWith(
-                          color: Dp.textMuted,
-                          fontSize: 8.5,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   const LivePill(dense: true),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   const _ClockTick(),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      cc.toggleTheme();
-                    },
-                    child: Container(
-                      width: 26,
-                      height: 26,
-                      decoration: BoxDecoration(
-                        color: Dp.canvasSoft,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Dp.hairline),
-                      ),
-                      child: Center(
-                        child: Drishti.icon(
-                          cc.isDarkMode ? DGlyph.sun : DGlyph.moon,
-                          size: 13,
-                          color: Dp.ink,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -267,39 +280,46 @@ class _CommandScreenState extends State<CommandScreen> {
     );
   }
 
-  Widget _rightControls() {
-    return SafeArea(
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Padding(
-          padding: const EdgeInsets.only(right: 14),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _LayerToggle(
-                glyph: DGlyph.heat,
-                active: _heat,
-                label: 'HEAT',
-                onTap: () => setState(() => _heat = !_heat),
-              ),
-              const SizedBox(height: 10),
-              _LayerToggle(
-                glyph: DGlyph.route,
-                active: _routes,
-                label: 'ROUTE',
-                onTap: () => setState(() => _routes = !_routes),
-              ),
-              const SizedBox(height: 10),
-              _LayerToggle(
-                glyph: DGlyph.crosshair,
-                active: false,
-                label: 'CENTER',
-                onTap: () => _map.move(
-                    const LatLng(SimWorld.cityLat, SimWorld.cityLng), 12.6),
-              ),
-            ],
+  Widget _rightControls(CommandCenter cc) {
+    return Positioned(
+      top: 136,
+      right: 14,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _LayerToggle(
+            glyph: DGlyph.heat,
+            active: cc.showHeatmap,
+            label: 'HEAT',
+            onTap: () {
+              HapticFeedback.selectionClick();
+              cc.toggleHeatmap();
+            },
           ),
-        ),
+          const SizedBox(height: 10),
+          _LayerToggle(
+            glyph: DGlyph.route,
+            active: cc.showCorridors,
+            label: 'ROUTE',
+            onTap: () {
+              HapticFeedback.selectionClick();
+              cc.toggleCorridors();
+            },
+          ),
+          const SizedBox(height: 10),
+          _LayerToggle(
+            glyph: DGlyph.crosshair,
+            active: false,
+            label: 'CENTER',
+            onTap: () {
+              HapticFeedback.mediumImpact();
+              _map.move(
+                const LatLng(SimWorld.cityLat, SimWorld.cityLng),
+                12.6,
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -400,40 +420,63 @@ class _LayerToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgCol = active ? Dp.primary : Dp.canvas;
-    final fgCol = active ? Colors.white : Dp.ink;
+    final isDark = Dp.isDark;
+
+    // High-contrast background and border in both light and dark mode
+    final Color bgCol;
+    final Color borderCol;
+    final Color fgCol;
+    final List<BoxShadow> shadows;
+
+    if (active) {
+      bgCol = Dp.accent; // Electric blue #0066FF
+      borderCol = isDark ? const Color(0xFF3385FF) : const Color(0xFF0052CC);
+      fgCol = Colors.white;
+      shadows = [
+        BoxShadow(
+          color: const Color(0xFF0066FF).withValues(alpha: isDark ? 0.45 : 0.35),
+          blurRadius: 10,
+          offset: const Offset(0, 3),
+        ),
+      ];
+    } else {
+      bgCol = isDark ? const Color(0xFF1E242C) : Colors.white;
+      borderCol = isDark ? const Color(0xFF38444D) : const Color(0xFFC0C6CF);
+      fgCol = isDark ? const Color(0xFFF0F6FC) : const Color(0xFF141414);
+      shadows = [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: isDark ? 0.55 : 0.16),
+          blurRadius: 10,
+          offset: const Offset(0, 3),
+        ),
+      ];
+    }
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: Mo.fast,
         curve: Mo.easeOutTech,
-        width: 44,
-        height: 44,
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
           color: bgCol,
-          shape: BoxShape.circle,
-          border: Border.all(color: active ? Dp.primary : Dp.hairline),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: borderCol, width: 1.5),
+          boxShadow: shadows,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Drishti.icon(glyph, size: 16, color: fgCol),
-            const SizedBox(height: 2),
+            Drishti.icon(glyph, size: 18, color: fgCol),
+            const SizedBox(height: 3),
             Text(
               label,
               style: AppText.dataTiny.copyWith(
                 color: fgCol,
-                fontSize: 6.5,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
+                fontSize: 7.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.6,
               ),
             ),
           ],
@@ -519,6 +562,7 @@ class _FeedSheet extends StatelessWidget {
                   onTap: () => onSelect(cc.incidents[i]),
                 ),
               ),
+            const SizedBox(height: 96),
           ],
         ),
       ),

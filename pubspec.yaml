@@ -1,7 +1,7 @@
 name: drishti_transit
 description: "Drishti — an AI edge-detection network that turns city buses into live urban intelligence. National hackathon prototype."
 publish_to: 'none'
-version: 1.0.2+2
+version: 1.0.3+3
 
 environment:
   sdk: ^3.8.0

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../app/motion.dart';
@@ -28,7 +29,7 @@ class AnalyticsScreen extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
           children: [
             _Header(cc: cc),
             const SizedBox(height: 16),
@@ -106,7 +107,7 @@ class _Header extends StatelessWidget {
           GestureDetector(
             onTap: () {
               HapticFeedback.selectionClick();
-              cc.toggleTheme();
+              context.push('/settings');
             },
             child: Container(
               width: 28,
@@ -118,7 +119,7 @@ class _Header extends StatelessWidget {
               ),
               child: Center(
                 child: Drishti.icon(
-                  cc.isDarkMode ? DGlyph.sun : DGlyph.moon,
+                  DGlyph.settings,
                   size: 13,
                   color: Dp.ink,
                 ),
