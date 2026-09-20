@@ -23,9 +23,9 @@ class IncidentDetailScreen extends StatelessWidget {
     final cc = context.watch<CommandCenter>();
     final e = cc.byId(id);
     if (e == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: Dp.canvas,
-        body: Center(child: Text('Incident record not found')),
+        body: const Center(child: Text('Incident record not found')),
       );
     }
     return Scaffold(
@@ -332,7 +332,7 @@ class _FactsPanel extends StatelessWidget {
             style: AppText.body.copyWith(color: Dp.textMuted, fontSize: 13.5),
           ),
           const SizedBox(height: 14),
-          const HairDivider(color: Dp.hairline, thickness: double.infinity),
+          HairDivider(color: Dp.hairline, thickness: double.infinity),
           const SizedBox(height: 10),
           DataRow('TIMESTAMP', timeStr),
           DataRow('COORDINATES', event.gpsLabel),
@@ -399,9 +399,9 @@ class _ReportSheetState extends State<_ReportSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Dp.canvas,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(Dp.rMd)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(Dp.rMd)),
         border: Border(top: BorderSide(color: Dp.hairline)),
         boxShadow: [
           BoxShadow(

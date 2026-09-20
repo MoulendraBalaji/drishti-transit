@@ -80,7 +80,7 @@ class _AppShellState extends State<AppShell>
         // Left Sidebar (Mobbin Admin Dashboard Navigation)
         Container(
           width: 260,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Dp.canvas,
             border: Border(
               right: BorderSide(color: Dp.hairline, width: 1.0),
@@ -134,7 +134,7 @@ class _AppShellState extends State<AppShell>
                   ],
                 ),
               ),
-              const HairDivider(color: Dp.hairline, thickness: double.infinity),
+              HairDivider(color: Dp.hairline, thickness: double.infinity),
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -229,7 +229,7 @@ class _AppShellState extends State<AppShell>
               Container(
                 height: 60,
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Dp.canvas,
                   border: Border(
                     bottom: BorderSide(color: Dp.hairline, width: 1.0),
@@ -297,6 +297,36 @@ class _AppShellState extends State<AppShell>
                     ),
                     const SizedBox(width: 16),
                     const LivePill(label: 'ADMIN LIVE'),
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        cc.toggleTheme();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Dp.canvasSoft,
+                          borderRadius: BorderRadius.circular(Dp.rFull),
+                          border: Border.all(color: Dp.hairline),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Drishti.icon(
+                              cc.isDarkMode ? DGlyph.sun : DGlyph.moon,
+                              size: 13,
+                              color: Dp.ink,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              cc.isDarkMode ? 'LIGHT' : 'DARK',
+                              style: monoTxt(9, color: Dp.ink, w: FontWeight.w700, ls: 0.8),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

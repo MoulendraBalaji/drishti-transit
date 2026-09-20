@@ -87,7 +87,7 @@ class DrishtiDock extends StatelessWidget {
     return Container(
       height: Tok.dockHeight + bottomPad,
       padding: EdgeInsets.only(bottom: bottomPad),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Dp.canvas,
         border: Border(top: BorderSide(color: Dp.hairline, width: 1.0)),
       ),

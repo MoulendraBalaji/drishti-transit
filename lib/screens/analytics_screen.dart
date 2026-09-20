@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../app/motion.dart';
@@ -71,29 +72,59 @@ class _Header extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'NETWORK INSIGHT',
-                style: AppText.displayTitle.copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'NETWORK INSIGHT',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.displayTitle.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'PUNE METROPOLITAN GRID · ${_date()}',
-                style: AppText.dataTiny.copyWith(
-                  color: Dp.accent,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.0,
+                const SizedBox(height: 2),
+                Text(
+                  'PUNE METROPOLITAN GRID · ${_date()}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.dataTiny.copyWith(
+                    color: Dp.accent,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.0,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           const LivePill(dense: true, label: 'SYSTEM LIVE'),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              cc.toggleTheme();
+            },
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Dp.canvas,
+                shape: BoxShape.circle,
+                border: Border.all(color: Dp.hairline),
+              ),
+              child: Center(
+                child: Drishti.icon(
+                  cc.isDarkMode ? DGlyph.sun : DGlyph.moon,
+                  size: 13,
+                  color: Dp.ink,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -116,7 +147,7 @@ class _KpiRow extends StatelessWidget {
       children: [
         Expanded(
           child: Panel(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             child: StatBlock(
               number: cc.total.toString(),
               label: 'DETECTIONS',
@@ -124,24 +155,24 @@ class _KpiRow extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         Expanded(
           child: Panel(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             child: StatBlock(
               number: '${cc.busesOnline}',
-              label: 'ACTIVE NODES',
+              label: 'NODES ONLINE',
               color: Dp.accent,
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         Expanded(
           child: Panel(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             child: StatBlock(
               number: '${cc.coveragePercent}%',
-              label: 'CITY COVERAGE',
+              label: 'COVERAGE',
               color: Dp.ink,
             ),
           ),
@@ -320,7 +351,7 @@ class _TrendPanel extends StatelessWidget {
                   drawVerticalLine: false,
                   horizontalInterval: 0.25,
                   getDrawingHorizontalLine: (_) =>
-                      const FlLine(color: Dp.hairline, strokeWidth: 1),
+                      FlLine(color: Dp.hairline, strokeWidth: 1),
                 ),
                 borderData: FlBorderData(show: false),
                 lineTouchData: const LineTouchData(enabled: false),
@@ -399,7 +430,11 @@ class _TrendPanel extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 12, height: 3, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(1.5))),
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 6),
         Text(label, style: AppText.dataTiny.copyWith(color: Dp.textMuted, fontSize: 8.5)),
       ],
@@ -426,8 +461,9 @@ class _BreakdownPanel extends StatelessWidget {
         children: [
           for (final (kind, count) in rows)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 7),
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
                     width: 28,
@@ -444,20 +480,22 @@ class _BreakdownPanel extends StatelessWidget {
                       color: Dp.severityColor(kind.baseSeverity),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 5,
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 106,
                     child: Text(
                       kind.label.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: AppText.dataTiny.copyWith(
                         color: Dp.ink,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 0.6,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Expanded(
-                    flex: 6,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(3),
                       child: Container(
@@ -481,9 +519,9 @@ class _BreakdownPanel extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
                   SizedBox(
-                    width: 28,
+                    width: 32,
                     child: Text(
                       '$count',
                       textAlign: TextAlign.right,

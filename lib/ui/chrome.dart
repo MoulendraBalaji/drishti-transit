@@ -88,35 +88,39 @@ class _PulseDotPainter extends CustomPainter {
   bool shouldRepaint(_PulseDotPainter old) => old.color != color;
 }
 
-/// A Mobbin-styled card/panel: crisp 1px hairline border (#E0E0E0), 24px or 16px geometry.
+/// A Mobbin-styled card/panel: crisp 1px hairline border (#E0E0E0 in light, #30363D in dark), 24px or 16px geometry.
 class Panel extends StatelessWidget {
   const Panel({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
-    this.color = Dp.canvas,
-    this.border = Dp.hairline,
+    this.color,
+    this.border,
     this.radius = Dp.rMd,
     this.glow,
   });
 
   final Widget child;
   final EdgeInsets padding;
-  final Color color;
-  final Color border;
+  final Color? color;
+  final Color? border;
   final double radius;
   final Color? glow;
 
   @override
   Widget build(BuildContext context) {
+    final c = color ?? Dp.canvas;
+    final b = border ?? Dp.hairline;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: color,
+        color: c,
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: glow ?? border, width: 1.0),
+        border: Border.all(color: glow ?? b, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Dp.isDark
+                ? Colors.black.withValues(alpha: 0.35)
+                : Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -358,20 +362,29 @@ class StatBlock extends StatelessWidget {
     final col = color ?? Dp.ink;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          number,
-          style: AppText.displayNumber.copyWith(
-            color: col,
-            fontSize: 26,
-            fontWeight: FontWeight.w700,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            number,
+            style: AppText.displayNumber.copyWith(
+              color: col,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 3),
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AppText.dataTiny.copyWith(
             color: Dp.textMuted,
+            fontSize: 9.5,
             letterSpacing: 0.5,
           ),
         ),

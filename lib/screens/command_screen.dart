@@ -92,10 +92,11 @@ class _CommandScreenState extends State<CommandScreen> {
         backgroundColor: Dp.canvasSoft,
       ),
       children: [
-        // Carto Voyager / Positron light map for crystal-clear detection visibility
+        // Dynamic Carto Voyager (light) and Carto DarkMatter (dark) for clear detection visibility
         TileLayer(
-          urlTemplate:
-              'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+          urlTemplate: cc.isDarkMode
+              ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+              : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
           subdomains: const ['a', 'b', 'c', 'd'],
           userAgentPackageName: 'in.drishti.transit',
           maxZoom: 19,
@@ -222,6 +223,29 @@ class _CommandScreenState extends State<CommandScreen> {
                   const LivePill(dense: true),
                   const SizedBox(width: 8),
                   const _ClockTick(),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      cc.toggleTheme();
+                    },
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        color: Dp.canvasSoft,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Dp.hairline),
+                      ),
+                      child: Center(
+                        child: Drishti.icon(
+                          cc.isDarkMode ? DGlyph.sun : DGlyph.moon,
+                          size: 13,
+                          color: Dp.ink,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -432,7 +456,7 @@ class _MapAttribution extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           border: Border.all(color: Dp.hairline),
         ),
-        child: const Text(
+        child: Text(
           '© OpenStreetMap · © CARTO · Google API',
           style: TextStyle(
             fontFamily: AppText.mono,
@@ -463,9 +487,9 @@ class _FeedSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Dp.canvas,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(Dp.rMd)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(Dp.rMd)),
         border: Border(
           top: BorderSide(color: Dp.hairline, width: 1.0),
         ),
@@ -485,7 +509,7 @@ class _FeedSheet extends StatelessWidget {
           children: [
             _SheetHandle(),
             _SheetHeader(cc),
-            const HairDivider(color: Dp.hairline, thickness: double.infinity),
+            HairDivider(color: Dp.hairline, thickness: double.infinity),
             const SizedBox(height: 4),
             for (var i = 0; i < cc.incidents.length; i++)
               _Delayed(
@@ -536,7 +560,7 @@ class _SheetHeader extends StatelessWidget {
             children: [
               Drishti.icon(DGlyph.feed, size: 15, color: Dp.ink),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'OPS FEED',
                 style: TextStyle(
                   fontFamily: AppText.mono,

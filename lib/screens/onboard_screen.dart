@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../app/motion.dart';
@@ -170,37 +171,67 @@ class _NodeBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(Dp.rFull),
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Drishti.icon(DGlyph.bus, size: 14, color: Colors.white),
+                Drishti.icon(DGlyph.bus, size: 14, color: Dp.onPrimary),
                 const SizedBox(width: 6),
                 Text(
                   cc.heroBusId,
-                  style: monoTxt(11, color: Colors.white, w: FontWeight.w700),
+                  style: monoTxt(11, color: Dp.onPrimary, w: FontWeight.w700),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'EDGE NODE 04 · ULTRA-HD SENSOR',
-                style: AppText.dataTiny.copyWith(
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'EDGE NODE 04 · ULTRA-HD',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.dataTiny.copyWith(
+                    color: Dp.ink,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${hero?.route ?? 'PB · ROUTE'} · ${hero?.gpsLabel ?? ''}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: monoTxt(9.5, color: Dp.textMuted),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          const LivePill(dense: true, label: 'LIVE FEED'),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              cc.toggleTheme();
+            },
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Dp.canvas,
+                shape: BoxShape.circle,
+                border: Border.all(color: Dp.hairline),
+              ),
+              child: Center(
+                child: Drishti.icon(
+                  cc.isDarkMode ? DGlyph.sun : DGlyph.moon,
+                  size: 13,
                   color: Dp.ink,
-                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                '${hero?.route ?? 'PB · ROUTE'} · ${hero?.gpsLabel ?? ''}',
-                style: monoTxt(9.5, color: Dp.textMuted),
-              ),
-            ],
+            ),
           ),
-          const Spacer(),
-          const LivePill(dense: true, label: 'LIVE FEED'),
         ],
       ),
     );
@@ -389,7 +420,7 @@ class _SignalBars extends StatelessWidget {
   }
 }
 
-/// The CAM → EDGE → CLOUD → CMD relay strip.
+/// The CAM → EDGE → CLOUD → CMD relay strip with clean aligned rail and labels.
 class _RelayStrip extends StatelessWidget {
   const _RelayStrip({required this.pulse});
   final AnimationController pulse;
@@ -408,15 +439,67 @@ class _RelayStrip extends StatelessWidget {
         animation: pulse,
         builder: (context, _) {
           final t = pulse.value;
-          return Row(
+          return Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              for (var i = 0; i < nodes.length; i++) ...[
-                if (i > 0) Expanded(child: _relayLine(t, nodes[i - 1].$3, nodes[i].$3)),
-                _relayNode(nodes[i].$1, nodes[i].$2, t >= nodes[i].$3),
-              ],
+              // Rail with icon circles and connecting progress track
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < nodes.length; i++) ...[
+                    if (i > 0)
+                      Expanded(
+                        child: _relayLine(t, nodes[i - 1].$3, nodes[i].$3),
+                      ),
+                    _nodeCircle(nodes[i].$1, t >= nodes[i].$3),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 6),
+              // Clean labels row matching each node position
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  for (var i = 0; i < nodes.length; i++)
+                    SizedBox(
+                      width: 52,
+                      child: Text(
+                        nodes[i].$2,
+                        textAlign: TextAlign.center,
+                        style: monoTxt(
+                          8.5,
+                          color: t >= nodes[i].$3 ? Dp.ink : Dp.textMuted,
+                          w: FontWeight.w700,
+                          ls: 0.4,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _nodeCircle(DGlyph glyph, bool lit) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: lit ? Dp.accent : Dp.canvasSoft,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: lit ? Dp.accent : Dp.hairline,
+          width: 1.5,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Drishti.icon(
+        glyph,
+        size: 14,
+        color: lit ? Colors.white : Dp.textFaint,
       ),
     );
   }
@@ -425,7 +508,7 @@ class _RelayStrip extends StatelessWidget {
     final fill = ((t - from) / (to - from)).clamp(0.0, 1.0);
     return Container(
       height: 3,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: Dp.field,
         borderRadius: BorderRadius.circular(2),
@@ -444,35 +527,6 @@ class _RelayStrip extends StatelessWidget {
       ),
     );
   }
-
-  Widget _relayNode(DGlyph glyph, String label, bool lit) {
-    final col = lit ? Dp.accent : Dp.textFaint;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Drishti.icon(glyph, size: 16, color: col),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: monoTxt(
-            8.5,
-            color: lit ? Dp.ink : Dp.textMuted,
-            w: FontWeight.w700,
-            ls: 0.5,
-          ),
-        ),
-        const SizedBox(height: 3),
-        Container(
-          width: 5,
-          height: 5,
-          decoration: BoxDecoration(
-            color: lit ? Dp.accent : Dp.hairline,
-            shape: BoxShape.circle,
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 class _ConfidencePanel extends StatelessWidget {
@@ -486,22 +540,44 @@ class _ConfidencePanel extends StatelessWidget {
     final v = visual;
     if (v == null) {
       return Panel(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Drishti.icon(DGlyph.scan, size: 18, color: Dp.textMuted),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Dp.canvasSoft,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Dp.hairline),
+              ),
+              alignment: Alignment.center,
+              child: Drishti.icon(DGlyph.scan, size: 16, color: Dp.accent),
+            ),
             const SizedBox(width: 12),
-            Text(
-              'SCANNING STREET · AWAITING OBJECT DETECTION',
-              style: AppText.dataTiny.copyWith(
-                color: Dp.textMuted,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.8,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'SCANNING STREET SURFACE',
+                    style: AppText.dataStrong.copyWith(color: Dp.ink, fontSize: 12),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Awaiting neural object detection telemetry…',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.dataTiny.copyWith(color: Dp.textMuted),
+                  ),
+                ],
               ),
             ),
-            const Spacer(),
+            const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
               decoration: BoxDecoration(
                 color: Dp.canvasSoft,
                 borderRadius: BorderRadius.circular(Dp.rFull),
@@ -525,38 +601,61 @@ class _ConfidencePanel extends StatelessWidget {
       builder: (context, _) {
         return Panel(
           border: lock ? Dp.accent : Dp.hairline,
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    width: 32,
-                    height: 32,
+                    width: 34,
+                    height: 34,
                     decoration: BoxDecoration(
                       color: Dp.canvasSoft,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Dp.hairline),
                     ),
                     alignment: Alignment.center,
-                    child: Drishti.icon(_glyphFor(v.kind), size: 16, color: col),
+                    child: Drishti.icon(_glyphFor(v.kind), size: 17, color: col),
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    v.kind.label.toUpperCase(),
-                    style: AppText.dataStrong.copyWith(
-                      color: Dp.ink,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                v.kind.label.toUpperCase(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppText.dataStrong.copyWith(
+                                  color: Dp.ink,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            SeverityTag(v.kind.baseSeverity, size: 8.5),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'CONFIDENCE TRACKER',
+                          style: AppText.dataTiny.copyWith(color: Dp.textMuted, fontSize: 8.5),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
-                  SeverityTag(v.kind.baseSeverity, size: 9),
-                  const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                     decoration: BoxDecoration(
-                      color: lock ? Dp.accent.withValues(alpha: 0.1) : Dp.canvasSoft,
+                      color: lock ? Dp.accent.withValues(alpha: 0.12) : Dp.canvasSoft,
                       borderRadius: BorderRadius.circular(Dp.rFull),
                       border: Border.all(
                         color: lock ? Dp.accent : Dp.hairline,
@@ -576,17 +675,21 @@ class _ConfidencePanel extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    '${(shown * 100).toStringAsFixed(1)}%',
-                    style: monoTxt(28, color: Dp.ink, w: FontWeight.w800, ls: -0.5),
+                  SizedBox(
+                    width: 82,
+                    child: Text(
+                      '${(shown * 100).toStringAsFixed(1)}%',
+                      style: monoTxt(24, color: Dp.ink, w: FontWeight.w800, ls: -0.5),
+                    ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: Container(
-                        height: 8,
+                        height: 9,
                         color: Dp.field,
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
@@ -616,11 +719,15 @@ class _ConfidencePanel extends StatelessWidget {
                     children: [
                       Drishti.icon(DGlyph.plate, size: 14, color: Dp.accent),
                       const SizedBox(width: 10),
-                      Text(
-                        'OCR LICENSE PLATE: ${v.plate!}',
-                        style: monoTxt(13, color: Dp.ink, w: FontWeight.w700, ls: 1.2),
+                      Expanded(
+                        child: Text(
+                          'OCR LICENSE PLATE: ${v.plate!}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: monoTxt(12.5, color: Dp.ink, w: FontWeight.w700, ls: 1.0),
+                        ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       const SeverityTag(SeverityClass.critical, size: 8),
                     ],
                   ),
@@ -651,8 +758,14 @@ class _NodeLog extends StatelessWidget {
   Widget build(BuildContext context) {
     final hero = cc.incidents.where((e) => e.busId == cc.heroBusId).take(4).toList();
     if (hero.isEmpty) {
-      return const Panel(
-        child: Text('NO DETECTIONS THIS SESSION.', style: AppText.bodySmall),
+      return Panel(
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: Text(
+            'NO DETECTIONS THIS SESSION.',
+            style: AppText.dataTiny.copyWith(color: Dp.textMuted),
+          ),
+        ),
       );
     }
     return Panel(
@@ -663,6 +776,7 @@ class _NodeLog extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
                     width: 32,
@@ -684,22 +798,36 @@ class _NodeLog extends StatelessWidget {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           '${e.kind.label.toUpperCase()} · ${e.confLabel}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: AppText.dataStrong.copyWith(color: Dp.ink, fontSize: 12),
                         ),
                         if (e.trackId != null) ...[
                           const SizedBox(height: 2),
                           Text(
                             '${e.trackId} · SPEED ${e.speedKmh?.toStringAsFixed(0)} KM/H · DIST ${e.distanceM?.toStringAsFixed(1)} M',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: AppText.dataTiny.copyWith(color: Dp.textMuted, fontSize: 8.5),
                           ),
                         ],
                       ],
                     ),
                   ),
-                  Text(e.timeLabel, style: AppText.dataTiny.copyWith(color: Dp.textMuted)),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Dp.canvasSoft,
+                      borderRadius: BorderRadius.circular(Dp.rFull),
+                      border: Border.all(color: Dp.hairline),
+                    ),
+                    child: Text(e.timeLabel, style: AppText.dataTiny.copyWith(color: Dp.textMuted)),
+                  ),
                   const SizedBox(width: 8),
                   Drishti.icon(DGlyph.chevronRight, size: 12, color: Dp.textFaint),
                 ],

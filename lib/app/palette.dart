@@ -11,42 +11,75 @@ import 'package:flutter/material.dart';
 class Dp {
   Dp._();
 
-  // Mobbin Canvas & Neutral ladder
-  static const Color canvas = Color(0xFFFFFFFF);
-  static const Color canvasSoft = Color(0xFFF3F3F3);
-  static const Color field = Color(0xFFF0F0F0);
-  static const Color hairline = Color(0xFFE0E0E0);
-  static const Color hairlineSoft = Color(0xFFF0F0F0);
+  /// Whether the active theme is Dark Mode.
+  static bool isDark = false;
 
-  // Surface aliases for backward compatibility
-  static const Color bg = canvas;
-  static const Color surface = canvas;
-  static const Color raised = canvasSoft;
-  static const Color raised2 = field;
-  static const Color line = hairline;
-  static const Color lineBright = Color(0xFFCCCCCC);
+  // Mobbin Canvas & Neutral ladder (Light)
+  static const Color _canvasLight = Color(0xFFFFFFFF);
+  static const Color _canvasSoftLight = Color(0xFFF7F8FA);
+  static const Color _fieldLight = Color(0xFFF0F2F5);
+  static const Color _hairlineLight = Color(0xFFE2E4E8);
+  static const Color _hairlineSoftLight = Color(0xFFECEFF2);
 
-  // Mobbin Inks & Typography colors
-  static const Color primary = Color(0xFF141414);
-  static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color ink = Color(0xFF141414);
-  static const Color inkSoft = Color(0xFF262626);
-  static const Color textMuted = Color(0xFF707070);
-  static const Color textFaint = Color(0xFFADADAD);
+  // Mobbin Inks (Light)
+  static const Color _primaryLight = Color(0xFF121417);
+  static const Color _onPrimaryLight = Color(0xFFFFFFFF);
+  static const Color _inkLight = Color(0xFF121417);
+  static const Color _inkSoftLight = Color(0xFF26292E);
+  static const Color _textMutedLight = Color(0xFF656D76);
+  static const Color _textFaintLight = Color(0xFF8C959F);
+
+  // Mobbin Deep Charcoal Canvas & Neutral ladder (Dark Mode)
+  static const Color _canvasDark = Color(0xFF0D1117);
+  static const Color _canvasSoftDark = Color(0xFF161B22);
+  static const Color _fieldDark = Color(0xFF21262D);
+  static const Color _hairlineDark = Color(0xFF30363D);
+  static const Color _hairlineSoftDark = Color(0xFF21262D);
+
+  // Mobbin Crisp Inks (Dark Mode)
+  static const Color _primaryDark = Color(0xFFF0F6FC);
+  static const Color _onPrimaryDark = Color(0xFF0D1117);
+  static const Color _inkDark = Color(0xFFF0F6FC);
+  static const Color _inkSoftDark = Color(0xFFC9D1D9);
+  static const Color _textMutedDark = Color(0xFF8B949E);
+  static const Color _textFaintDark = Color(0xFF484F58);
+
+  // Dynamic Theme-Aware Getters
+  static Color get canvas => isDark ? _canvasDark : _canvasLight;
+  static Color get canvasSoft => isDark ? _canvasSoftDark : _canvasSoftLight;
+  static Color get field => isDark ? _fieldDark : _fieldLight;
+  static Color get hairline => isDark ? _hairlineDark : _hairlineLight;
+  static Color get hairlineSoft => isDark ? _hairlineSoftDark : _hairlineSoftLight;
+
+  // Surface aliases
+  static Color get bg => canvas;
+  static Color get surface => canvas;
+  static Color get raised => canvasSoft;
+  static Color get raised2 => field;
+  static Color get line => hairline;
+  static Color get lineBright => isDark ? const Color(0xFF3B434D) : const Color(0xFFCCCCCC);
+
+  // Inks & Typography colors
+  static Color get primary => isDark ? _primaryDark : _primaryLight;
+  static Color get onPrimary => isDark ? _onPrimaryDark : _onPrimaryLight;
+  static Color get ink => isDark ? _inkDark : _inkLight;
+  static Color get inkSoft => isDark ? _inkSoftDark : _inkSoftLight;
+  static Color get textMuted => isDark ? _textMutedDark : _textMutedLight;
+  static Color get textFaint => isDark ? _textFaintDark : _textFaintLight;
 
   // Text aliases
-  static const Color mist = textMuted;
-  static const Color fog = textFaint;
-  static const Color dim = Color(0xFFD4D4D4);
+  static Color get mist => textMuted;
+  static Color get fog => textFaint;
+  static Color get dim => isDark ? const Color(0xFF30363D) : const Color(0xFFD4D4D4);
 
-  // Electric Blue Accent (reserved for live state, active nav, primary CTAs)
+  // Electric Blue Accent (vibrant across both light and dark)
   static const Color accent = Color(0xFF0066FF);
-  static const Color signal = accent;
+  static Color get signal => accent;
   static const Color signalDim = Color(0xFF0052CC);
   static const Color onSignal = Color(0xFFFFFFFF);
 
   // Brand accent for highlights
-  static const Color saffron = Color(0xFF0066FF);
+  static Color get saffron => accent;
 
   // Geometry tokens from DESIGN-mobbin.md
   static const double rSm = 16.0;
@@ -73,9 +106,9 @@ class Dp {
   }
 
   static Color severitySoft(SeverityClass s) =>
-      severityColor(s).withValues(alpha: 0.12);
+      severityColor(s).withValues(alpha: isDark ? 0.20 : 0.12);
 
-  static const Color vehicleColor = Color(0xFF141414);
+  static Color get vehicleColor => isDark ? const Color(0xFFF0F6FC) : const Color(0xFF141414);
 
   // Heat layer ramp
   static const Color heatLow = Color(0x000066FF);

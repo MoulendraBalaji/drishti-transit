@@ -30,12 +30,17 @@ class _DrishtiAppState extends State<DrishtiApp> {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: widget.center,
-      child: MaterialApp.router(
-        title: 'Drishti',
-        debugShowCheckedModeBanner: false,
-        theme: buildDrishtiTheme(),
-        themeMode: ThemeMode.dark,
-        routerConfig: _router,
+      child: Consumer<CommandCenter>(
+        builder: (context, cc, _) {
+          return MaterialApp.router(
+            title: 'Drishti',
+            debugShowCheckedModeBanner: false,
+            theme: buildDrishtiTheme(isDark: false),
+            darkTheme: buildDrishtiTheme(isDark: true),
+            themeMode: cc.themeMode,
+            routerConfig: _router,
+          );
+        },
       ),
     );
   }

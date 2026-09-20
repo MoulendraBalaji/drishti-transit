@@ -28,6 +28,8 @@ enum DGlyph {
   shield,
   target,
   info,
+  sun,
+  moon,
 }
 
 /// Renders a [DGlyph] as a crisp stroked glyph.
@@ -265,6 +267,26 @@ class _DrishtiGlyphPainter extends CustomPainter {
         circle(const Offset(0.5, 0.5), 0.42);
         dot(const Offset(0.5, 0.32), 0.06);
         line(const Offset(0.5, 0.46), const Offset(0.5, 0.66));
+        break;
+      case DGlyph.sun:
+        circle(const Offset(0.5, 0.5), 0.22);
+        line(const Offset(0.5, 0.08), const Offset(0.5, 0.20));
+        line(const Offset(0.5, 0.80), const Offset(0.5, 0.92));
+        line(const Offset(0.08, 0.5), const Offset(0.20, 0.5));
+        line(const Offset(0.80, 0.5), const Offset(0.92, 0.5));
+        line(const Offset(0.20, 0.20), const Offset(0.28, 0.28));
+        line(const Offset(0.72, 0.72), const Offset(0.80, 0.80));
+        line(const Offset(0.20, 0.80), const Offset(0.28, 0.72));
+        line(const Offset(0.72, 0.28), const Offset(0.80, 0.20));
+        break;
+      case DGlyph.moon:
+        final p = Path()
+          ..moveTo(s * 0.72, s * 0.16)
+          ..cubicTo(s * 0.38, s * 0.20, s * 0.20, s * 0.48, s * 0.28, s * 0.76)
+          ..cubicTo(s * 0.34, s * 0.88, s * 0.48, s * 0.96, s * 0.62, s * 0.94)
+          ..cubicTo(s * 0.28, s * 0.88, s * 0.16, s * 0.44, s * 0.50, s * 0.14)
+          ..close();
+        canvas.drawPath(p, paint);
         break;
     }
   }

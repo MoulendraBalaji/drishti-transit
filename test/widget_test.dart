@@ -20,4 +20,18 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(milliseconds: 100));
   });
+
+  testWidgets('toggles theme between dark and light modes dynamically', (tester) async {
+    final center = CommandCenter();
+    expect(center.isDarkMode, isTrue);
+
+    center.toggleTheme();
+    expect(center.isDarkMode, isFalse);
+    expect(center.themeMode, ThemeMode.light);
+
+    center.toggleTheme();
+    expect(center.isDarkMode, isTrue);
+    expect(center.themeMode, ThemeMode.dark);
+    center.dispose();
+  });
 }

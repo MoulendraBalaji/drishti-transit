@@ -15,12 +15,12 @@ class AppText {
   static const String sans = 'IBMPlexSans';
   static const String mono = 'IBMPlexMono';
 
-  static const Color hi = Dp.ink;
-  static const Color mi = Dp.textMuted;
-  static const Color lo = Dp.textFaint;
+  static Color get hi => Dp.ink;
+  static Color get mi => Dp.textMuted;
+  static Color get lo => Dp.textFaint;
 
   // --- Display Typography (DESIGN-mobbin.md hierarchy) ---------------------
-  static const TextStyle displayHero = TextStyle(
+  static TextStyle get displayHero => TextStyle(
     fontFamily: display,
     fontSize: 42,
     height: 1.05,
@@ -29,7 +29,7 @@ class AppText {
     color: Dp.ink,
   );
 
-  static const TextStyle displayTitle = TextStyle(
+  static TextStyle get displayTitle => TextStyle(
     fontFamily: display,
     fontSize: 24,
     height: 1.15,
@@ -38,7 +38,7 @@ class AppText {
     color: Dp.ink,
   );
 
-  static const TextStyle displaySection = TextStyle(
+  static TextStyle get displaySection => TextStyle(
     fontFamily: display,
     fontSize: 18,
     height: 1.2,
@@ -47,7 +47,7 @@ class AppText {
     color: Dp.ink,
   );
 
-  static const TextStyle displayNumber = TextStyle(
+  static TextStyle get displayNumber => TextStyle(
     fontFamily: display,
     fontSize: 28,
     height: 1.0,
@@ -65,7 +65,7 @@ class AppText {
       );
 
   // --- Technical body (IBM Plex Sans) ----------------------------------
-  static const TextStyle body = TextStyle(
+  static TextStyle get body => TextStyle(
     fontFamily: sans,
     fontSize: 15,
     height: 1.4,
@@ -74,7 +74,7 @@ class AppText {
     color: Dp.ink,
   );
 
-  static const TextStyle bodySmall = TextStyle(
+  static TextStyle get bodySmall => TextStyle(
     fontFamily: sans,
     fontSize: 13,
     height: 1.35,
@@ -83,7 +83,7 @@ class AppText {
     color: Dp.textMuted,
   );
 
-  static const TextStyle label = TextStyle(
+  static TextStyle get label => TextStyle(
     fontFamily: sans,
     fontSize: 12,
     height: 1.2,
@@ -93,7 +93,7 @@ class AppText {
   );
 
   // --- Data & Telemetry (IBM Plex Mono) --------------------------------
-  static const TextStyle data = TextStyle(
+  static TextStyle get data => TextStyle(
     fontFamily: mono,
     fontSize: 12,
     height: 1.3,
@@ -102,7 +102,7 @@ class AppText {
     color: Dp.ink,
   );
 
-  static const TextStyle dataStrong = TextStyle(
+  static TextStyle get dataStrong => TextStyle(
     fontFamily: mono,
     fontSize: 12,
     height: 1.3,
@@ -111,7 +111,7 @@ class AppText {
     color: Dp.ink,
   );
 
-  static const TextStyle dataBig = TextStyle(
+  static TextStyle get dataBig => TextStyle(
     fontFamily: mono,
     fontSize: 20,
     height: 1.1,
@@ -120,7 +120,7 @@ class AppText {
     color: Dp.ink,
   );
 
-  static const TextStyle dataTiny = TextStyle(
+  static TextStyle get dataTiny => TextStyle(
     fontFamily: mono,
     fontSize: 10,
     height: 1.25,

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../app/palette.dart';
 import 'detection_service.dart';
@@ -19,6 +19,7 @@ import 'sim.dart';
 /// through here, so the judge can trace one detection end to end.
 class CommandCenter extends ChangeNotifier {
   CommandCenter({bool simulate = true}) {
+    Dp.isDark = isDarkMode;
     _fleet = FleetService();
     _svc = DetectionService(_fleet);
     _seed();
@@ -26,6 +27,23 @@ class CommandCenter extends ChangeNotifier {
     if (simulate) {
       _decay = Timer.periodic(const Duration(seconds: 5), (_) => _decayTick());
     }
+  }
+
+  ThemeMode _themeMode = ThemeMode.dark;
+  ThemeMode get themeMode => _themeMode;
+  bool get isDarkMode => _themeMode == ThemeMode.dark;
+
+  void toggleTheme() {
+    _themeMode = isDarkMode ? ThemeMode.light : ThemeMode.dark;
+    Dp.isDark = isDarkMode;
+    notifyListeners();
+  }
+
+  void setThemeMode(ThemeMode mode) {
+    if (_themeMode == mode) return;
+    _themeMode = mode;
+    Dp.isDark = isDarkMode;
+    notifyListeners();
   }
 
   late final FleetService _fleet;
