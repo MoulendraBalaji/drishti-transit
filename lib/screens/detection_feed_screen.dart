@@ -199,12 +199,13 @@ class _DetectionFeedScreenState extends State<DetectionFeedScreen>
   Widget build(BuildContext context) {
     final cc = context.watch<CommandCenter>();
     final curSec = _currentPositionSec;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 720;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: EdgeInsets.fromLTRB(16, 12, 16, isDesktop ? 24 : 100),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1040),
@@ -240,65 +241,124 @@ class _DetectionFeedScreenState extends State<DetectionFeedScreen>
   Widget _buildNodeStatusBar(CommandCenter cc, double curSec) {
     final hero = cc.buses.where((b) => b.hero).firstOrNull;
     final speed = _calcSpeedAtTime(curSec);
+    final isDesktop = MediaQuery.sizeOf(context).width >= 720;
+
+    if (isDesktop) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Dp.card,
+          borderRadius: BorderRadius.circular(Dp.rFull),
+          border: Border.all(color: Dp.hairline),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Dp.field,
+                borderRadius: BorderRadius.circular(Dp.rFull),
+                border: Border.all(color: const Color(0xFFFF9933).withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const AshokaChakra(size: 14, color: Color(0xFF000080)),
+                  const SizedBox(width: 6),
+                  Text(
+                    cc.heroBusId,
+                    style: monoTxt(11, color: Dp.ink, w: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'AIS-140 CAM 01 · FORWARD ROAD SCANNER',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: monoTxt(10.5, color: Dp.ink, w: FontWeight.w700, ls: 0.5),
+                      ),
+                      const SizedBox(width: 6),
+                      const GovBadge(label: 'MoRTH', dense: true),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${hero?.route ?? 'ROUTE 12'} · PUNE-CHORLA GHAT CORRIDOR · ${speed.toStringAsFixed(1)} KM/H',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: monoTxt(9, color: Dp.textMuted),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const LivePill(dense: true, label: '30 FPS'),
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Dp.card,
-        borderRadius: BorderRadius.circular(Dp.rFull),
+        borderRadius: BorderRadius.circular(Dp.rMd),
         border: Border.all(color: Dp.hairline),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: Dp.field,
-              borderRadius: BorderRadius.circular(Dp.rFull),
-              border: Border.all(color: const Color(0xFFFF9933).withValues(alpha: 0.5)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const AshokaChakra(size: 14, color: Color(0xFF000080)),
-                const SizedBox(width: 6),
-                Text(
-                  cc.heroBusId,
-                  style: monoTxt(11, color: Dp.ink, w: FontWeight.w700),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Dp.field,
+                  borderRadius: BorderRadius.circular(Dp.rFull),
+                  border: Border.all(color: const Color(0xFFFF9933).withValues(alpha: 0.5)),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    const AshokaChakra(size: 12, color: Color(0xFF000080)),
+                    const SizedBox(width: 5),
                     Text(
-                      'AIS-140 CAM 01 · FORWARD ROAD SCANNER',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: monoTxt(10.5, color: Dp.ink, w: FontWeight.w700, ls: 0.5),
+                      cc.heroBusId,
+                      style: monoTxt(10.5, color: Dp.ink, w: FontWeight.w700),
                     ),
-                    const SizedBox(width: 6),
-                    const GovBadge(label: 'MoRTH', dense: true),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '${hero?.route ?? 'ROUTE 12'} · PUNE-CHORLA GHAT CORRIDOR · ${speed.toStringAsFixed(1)} KM/H',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: monoTxt(9, color: Dp.textMuted),
-                ),
-              ],
-            ),
+              ),
+              const Spacer(),
+              const LivePill(dense: true, label: '30 FPS · LIVE'),
+            ],
           ),
-          const SizedBox(width: 8),
-          const LivePill(dense: true, label: '30 FPS'),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${hero?.route ?? 'ROUTE 12'} · PUNE CORRIDOR',
+                  style: monoTxt(9.5, color: Dp.ink, w: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${speed.toStringAsFixed(1)} KM/H',
+                style: monoTxt(10.5, color: Dp.accent, w: FontWeight.w700),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -552,9 +612,10 @@ class _DetectionFeedScreenState extends State<DetectionFeedScreen>
     final targetName = primary?.label ?? 'CONTINUOUS ROAD SCANNING';
     final confPct = (primary?.confidence ?? 0.96 * 100).toStringAsFixed(1);
     final isImpactSpike = accelZ >= 1.6;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 720;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isDesktop ? 16 : 14),
       decoration: BoxDecoration(
         color: Dp.card,
         borderRadius: BorderRadius.circular(Dp.rMd),
@@ -565,58 +626,92 @@ class _DetectionFeedScreenState extends State<DetectionFeedScreen>
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: primary != null
-                      ? primary.color.withValues(alpha: 0.15)
-                      : Dp.field,
-                  borderRadius: BorderRadius.circular(Dp.rFull),
-                  border: Border.all(
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
                     color: primary != null
-                        ? primary.color.withValues(alpha: 0.6)
-                        : Dp.hairline,
+                        ? primary.color.withValues(alpha: 0.15)
+                        : Dp.field,
+                    borderRadius: BorderRadius.circular(Dp.rFull),
+                    border: Border.all(
+                      color: primary != null
+                          ? primary.color.withValues(alpha: 0.6)
+                          : Dp.hairline,
+                    ),
                   ),
-                ),
-                child: Text(
-                  'ACTIVE LOCK: $targetName',
-                  style: monoTxt(
-                    10.5,
-                    color: primary?.color ?? Dp.textMuted,
-                    w: FontWeight.w700,
-                    ls: 0.6,
+                  child: Text(
+                    'LOCK: $targetName',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: monoTxt(
+                      10,
+                      color: primary?.color ?? Dp.textMuted,
+                      w: FontWeight.w700,
+                      ls: 0.5,
+                    ),
                   ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Text(
                 'CONF: $confPct%',
-                style: monoTxt(12, color: Dp.accent, w: FontWeight.w800, ls: 0.5),
+                style: monoTxt(11, color: Dp.accent, w: FontWeight.w800, ls: 0.5),
               ),
             ],
           ),
           const SizedBox(height: 14),
-          // Dynamic Metrics Grid
-          Row(
-            children: [
-              Expanded(
-                child: _buildParam('TRANSIT SPEED', '${speed.toStringAsFixed(1)} KM/H'),
-              ),
-              Expanded(
-                child: _buildParam(
-                  'VERTICAL Z-ACCEL',
-                  '${accelZ.toStringAsFixed(2)} g ${isImpactSpike ? '⚠️ [SPIKE]' : '[NOMINAL]'}',
-                  highlight: isImpactSpike,
+          // Dynamic Metrics Grid (4 columns on desktop, 2x2 grid on mobile)
+          if (isDesktop)
+            Row(
+              children: [
+                Expanded(
+                  child: _buildParam('TRANSIT SPEED', '${speed.toStringAsFixed(1)} KM/H'),
                 ),
-              ),
-              Expanded(
-                child: _buildParam('GEO-ACCURACY', '± 0.38 m (NavIC/GPS)'),
-              ),
-              Expanded(
-                child: _buildParam('INFERENCE ENGINE', 'YOLOv10-Transit (11.2ms)'),
-              ),
-            ],
-          ),
+                Expanded(
+                  child: _buildParam(
+                    'VERTICAL Z-ACCEL',
+                    '${accelZ.toStringAsFixed(2)} g ${isImpactSpike ? '⚠️ [SPIKE]' : '[NOMINAL]'}',
+                    highlight: isImpactSpike,
+                  ),
+                ),
+                Expanded(
+                  child: _buildParam('GEO-ACCURACY', '± 0.38 m (NavIC/GPS)'),
+                ),
+                Expanded(
+                  child: _buildParam('INFERENCE ENGINE', 'YOLOv10-Transit (11.2ms)'),
+                ),
+              ],
+            )
+          else ...[
+            Row(
+              children: [
+                Expanded(
+                  child: _buildParam('TRANSIT SPEED', '${speed.toStringAsFixed(1)} KM/H'),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildParam(
+                    'VERTICAL Z-ACCEL',
+                    '${accelZ.toStringAsFixed(2)} g ${isImpactSpike ? '⚠️ SPIKE' : 'NOMINAL'}',
+                    highlight: isImpactSpike,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildParam('GEO-ACCURACY', '± 0.38 m (NavIC)'),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildParam('INFERENCE ENGINE', 'YOLOv10 (11.2ms)'),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

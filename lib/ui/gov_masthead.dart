@@ -42,152 +42,270 @@ class GovMasthead extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cc = context.watch<CommandCenter>();
-    final isDark = Dp.isDark;
     final isDesktop = MediaQuery.sizeOf(context).width >= 900;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const GovTricolorBar(height: 3.5),
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isDesktop ? 20 : 12,
-            vertical: dense ? 6 : 8,
-          ),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF070B13) : const Color(0xFFFFFFFF),
-            border: Border(
-              bottom: BorderSide(
-                color: isDark ? const Color(0xFF1B283F) : const Color(0xFFE2E8F0),
-                width: 1.0,
-              ),
-            ),
-          ),
-          child: Row(
-            children: [
-              // National Emblem Badge & Bilingual Ministry Masthead
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Official Government Logo / App Icon Tile
-                  Container(
-                    width: 32,
-                    height: 32,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF142036) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(7),
-                      border: Border.all(
-                        color: isDark ? const Color(0xFF2C4166) : const Color(0xFFCBD5E1),
-                        width: 1.2,
-                      ),
-                    ),
-                    child: Image.asset(
-                      'assets/images/dristhi.jpeg',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Center(
-                        child: Drishti.icon(DGlyph.shield, size: 16, color: Dp.accent),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'भारत सरकार',
-                            style: TextStyle(
-                              fontFamily: AppText.sans,
-                              fontSize: isDesktop ? 10.5 : 9.5,
-                              fontWeight: FontWeight.w700,
-                              color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF0F172A),
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 5),
-                            child: Text(
-                              '|',
-                              style: monoTxt(9, color: Dp.textFaint),
-                            ),
-                          ),
-                          Text(
-                            'GOVERNMENT OF INDIA',
-                            style: monoTxt(
-                              isDesktop ? 9.5 : 8.5,
-                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
-                              w: FontWeight.w700,
-                              ls: 0.6,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        isDesktop
-                            ? 'सड़क परिवहन एवं राजमार्ग मंत्रालय • Ministry of Road Transport & Highways'
-                            : 'MoRTH • SMART CITIES MISSION',
-                        style: TextStyle(
-                          fontFamily: AppText.sans,
-                          fontSize: isDesktop ? 10 : 8.5,
-                          fontWeight: FontWeight.w500,
-                          color: isDark ? const Color(0xFF8899AC) : const Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const Spacer(),
-              // AIS-140 Status Badge
-              if (isDesktop) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF111E33) : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(Dp.rSm),
-                    border: Border.all(
-                      color: isDark ? const Color(0xFF223554) : const Color(0xFFE2E8F0),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 5,
-                        height: 5,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF138808),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        'NIC GOV-NET • AIS-140 CERTIFIED',
-                        style: monoTxt(8.5, color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155), w: FontWeight.w700, ls: 0.5),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-              ],
-              // Quick Theme Toggle Button (Sun / Moon / Auto)
-              _buildQuickThemeToggle(context, cc),
-              const SizedBox(width: 6),
-              // Dedicated Settings Gear Button
-              _buildSettingsButton(context),
-            ],
-          ),
-        ),
+        GovTricolorBar(height: isDesktop ? 3.5 : 3.0),
+        isDesktop ? _buildDesktopMasthead(context, cc) : _buildMobileMasthead(context, cc),
       ],
     );
   }
 
-  Widget _buildQuickThemeToggle(BuildContext context, CommandCenter cc) {
+  Widget _buildMobileMasthead(BuildContext context, CommandCenter cc) {
+    final isDark = Dp.isDark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF070B13) : const Color(0xFFFFFFFF),
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? const Color(0xFF1B283F) : const Color(0xFFE2E8F0),
+            width: 1.0,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // App Logo Tile
+          Container(
+            width: 32,
+            height: 32,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF142036) : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: const Color(0xFFFF9933),
+                width: 1.4,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF9933).withValues(alpha: 0.25),
+                  blurRadius: 6,
+                ),
+              ],
+            ),
+            child: Image.asset(
+              'assets/images/dristhi.jpeg',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Center(
+                child: Drishti.icon(DGlyph.shield, size: 16, color: Dp.accent),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          // App Title & Sovereign Badging
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'DRISHTI TRANSIT',
+                      style: TextStyle(
+                        fontFamily: AppText.sans,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF138808).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(Dp.rFull),
+                        border: Border.all(
+                          color: const Color(0xFF138808).withValues(alpha: 0.5),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 4,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF138808),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            'LIVE',
+                            style: monoTxt(7.5, color: const Color(0xFF138808), w: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  'MoRTH AIS-140 · PUNE OBSERVE',
+                  style: monoTxt(
+                    8.5,
+                    color: isDark ? const Color(0xFF8899AC) : const Color(0xFF64748B),
+                    w: FontWeight.w600,
+                    ls: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Quick Theme Toggle Icon Button
+          _buildQuickThemeToggle(context, cc, iconOnly: true),
+          const SizedBox(width: 8),
+          // Settings Gear Button
+          _buildSettingsButton(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopMasthead(BuildContext context, CommandCenter cc) {
+    final isDark = Dp.isDark;
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: dense ? 6 : 8,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF070B13) : const Color(0xFFFFFFFF),
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? const Color(0xFF1B283F) : const Color(0xFFE2E8F0),
+            width: 1.0,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // National Emblem Badge & Bilingual Ministry Masthead
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF142036) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(7),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF2C4166) : const Color(0xFFCBD5E1),
+                    width: 1.2,
+                  ),
+                ),
+                child: Image.asset(
+                  'assets/images/dristhi.jpeg',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Center(
+                    child: Drishti.icon(DGlyph.shield, size: 16, color: Dp.accent),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'भारत सरकार',
+                        style: TextStyle(
+                          fontFamily: AppText.sans,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF0F172A),
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: Text(
+                          '|',
+                          style: monoTxt(9, color: Dp.textFaint),
+                        ),
+                      ),
+                      Text(
+                        'GOVERNMENT OF INDIA',
+                        style: monoTxt(
+                          9.5,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                          w: FontWeight.w700,
+                          ls: 0.6,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    'सड़क परिवहन एवं राजमार्ग मंत्रालय • Ministry of Road Transport & Highways',
+                    style: TextStyle(
+                      fontFamily: AppText.sans,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? const Color(0xFF8899AC) : const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const Spacer(),
+          // AIS-140 Status Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF111E33) : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(Dp.rSm),
+              border: Border.all(
+                color: isDark ? const Color(0xFF223554) : const Color(0xFFE2E8F0),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF138808),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  'NIC GOV-NET • AIS-140 CERTIFIED',
+                  style: monoTxt(8.5, color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155), w: FontWeight.w700, ls: 0.5),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Quick Theme Toggle Button (Sun / Moon / Auto)
+          _buildQuickThemeToggle(context, cc),
+          const SizedBox(width: 6),
+          // Dedicated Settings Gear Button
+          _buildSettingsButton(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickThemeToggle(BuildContext context, CommandCenter cc, {bool iconOnly = false}) {
     final mode = cc.themeMode;
     final isDark = Dp.isDark;
 
@@ -196,6 +314,33 @@ class GovMasthead extends StatelessWidget {
       ThemeMode.dark => (DGlyph.moon, 'Theme: Dark (Ops Room)'),
       ThemeMode.light => (DGlyph.sun, 'Theme: Light (Gov Portal)'),
     };
+
+    if (iconOnly) {
+      return Tooltip(
+        message: '$tip — Tap to toggle',
+        child: Tactile(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            cc.toggleTheme();
+          },
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF142036) : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDark ? const Color(0xFF2C4166) : const Color(0xFFCBD5E1),
+                width: 1.0,
+              ),
+            ),
+            child: Center(
+              child: Drishti.icon(icon, size: 15, color: isDark ? Dp.accent : const Color(0xFF0F172A)),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Tooltip(
       message: '$tip — Click to switch',

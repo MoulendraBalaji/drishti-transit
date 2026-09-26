@@ -91,6 +91,8 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.sizeOf(context).width >= 720;
+
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -102,45 +104,37 @@ class _Header extends StatelessWidget {
         children: [
           const GovTricolorBar(height: 2.5),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktop ? 16 : 12,
+              vertical: isDesktop ? 14 : 10,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const AshokaChakra(size: 24, color: Color(0xFF000080)),
-                const SizedBox(width: 12),
+                AshokaChakra(size: isDesktop ? 24 : 20, color: const Color(0xFF000080)),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            'पुणे नागरी वेधशाला • ',
-                            style: TextStyle(
-                              fontFamily: AppText.sans,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFFFF9933),
-                            ),
-                          ),
-                          Text(
-                            'NETWORK ANALYTICS',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppText.displayTitle.copyWith(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        'NETWORK ANALYTICS',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.displayTitle.copyWith(
+                          fontSize: isDesktop ? 20 : 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'PUNE METROPOLITAN GRID · AIS-140 REAL-TIME OBSERVATORY',
+                        isDesktop
+                            ? 'PUNE METROPOLITAN GRID · AIS-140 REAL-TIME OBSERVATORY'
+                            : 'पुणे महानगर • AIS-140 OBSERVATORY',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: monoTxt(9.5, color: Dp.accent, w: FontWeight.w700, ls: 0.8),
+                        style: monoTxt(isDesktop ? 9.5 : 8.5, color: Dp.accent, w: FontWeight.w700, ls: 0.6),
                       ),
                     ],
                   ),
@@ -160,73 +154,57 @@ class _KpiRow extends StatelessWidget {
   const _KpiRow({required this.cc});
   final CommandCenter cc;
 
+  Widget _buildCard(String number, String label, Color? color, String? trend) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Dp.card,
+        borderRadius: BorderRadius.circular(Dp.rSm),
+        border: Border.all(color: Dp.hairline),
+      ),
+      child: StatBlock(
+        number: number,
+        label: label,
+        color: color,
+        trend: trend,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final isDesktop = MediaQuery.sizeOf(context).width >= 720;
+
+    if (isDesktop) {
+      return Row(
+        children: [
+          Expanded(child: _buildCard(cc.total.toString(), 'TOTAL DEFECTS', Dp.ink, 'LIVE')),
+          const SizedBox(width: 8),
+          Expanded(child: _buildCard('${cc.busesOnline}', 'ACTIVE SCANNERS', Dp.accent, null)),
+          const SizedBox(width: 8),
+          Expanded(child: _buildCard('${cc.coveragePercent}%', 'GRID COVERAGE', Dp.note, null)),
+          const SizedBox(width: 8),
+          Expanded(child: _buildCard('${cc.countOf(DetectionKind.pothole)}', 'POTHOLES TRIAGED', Dp.critical, null)),
+        ],
+      );
+    }
+
+    return Column(
       children: [
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Dp.card,
-              borderRadius: BorderRadius.circular(Dp.rSm),
-              border: Border.all(color: Dp.hairline),
-            ),
-            child: StatBlock(
-              number: cc.total.toString(),
-              label: 'TOTAL DEFECTS',
-              color: Dp.ink,
-              trend: 'LIVE',
-            ),
-          ),
+        Row(
+          children: [
+            Expanded(child: _buildCard(cc.total.toString(), 'TOTAL DEFECTS', Dp.ink, 'LIVE')),
+            const SizedBox(width: 8),
+            Expanded(child: _buildCard('${cc.busesOnline}', 'ACTIVE SCANNERS', Dp.accent, null)),
+          ],
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Dp.card,
-              borderRadius: BorderRadius.circular(Dp.rSm),
-              border: Border.all(color: Dp.hairline),
-            ),
-            child: StatBlock(
-              number: '${cc.busesOnline}',
-              label: 'ACTIVE BUS SCANNERS',
-              color: Dp.accent,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Dp.card,
-              borderRadius: BorderRadius.circular(Dp.rSm),
-              border: Border.all(color: Dp.hairline),
-            ),
-            child: StatBlock(
-              number: '${cc.coveragePercent}%',
-              label: 'GRID COVERAGE',
-              color: Dp.note,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Dp.card,
-              borderRadius: BorderRadius.circular(Dp.rSm),
-              border: Border.all(color: Dp.hairline),
-            ),
-            child: StatBlock(
-              number: '${cc.countOf(DetectionKind.pothole)}',
-              label: 'POTHOLES TRIAGED',
-              color: Dp.critical,
-            ),
-          ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(child: _buildCard('${cc.coveragePercent}%', 'GRID COVERAGE', Dp.note, null)),
+            const SizedBox(width: 8),
+            Expanded(child: _buildCard('${cc.countOf(DetectionKind.pothole)}', 'POTHOLES TRIAGED', Dp.critical, null)),
+          ],
         ),
       ],
     );
@@ -452,10 +430,11 @@ class _TrendPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
+          Wrap(
+            spacing: 16,
+            runSpacing: 6,
             children: [
               _legendDot(const Color(0xFF5B6E84), 'HISTORICAL BASELINE'),
-              const SizedBox(width: 16),
               _legendDot(Dp.accent, 'LIVE DETECTED CONGESTION PEAKS'),
             ],
           ),

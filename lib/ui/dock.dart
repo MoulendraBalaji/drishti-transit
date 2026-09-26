@@ -303,7 +303,10 @@ class _DockItemState extends State<_DockItem> {
                   w: widget.active ? FontWeight.w700 : FontWeight.w500,
                   ls: 0.8,
                 ),
-                child: Text(widget.tab.label),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(widget.tab.label, maxLines: 1),
+                ),
               ),
               if (widget.active) ...[
                 const SizedBox(height: 2),

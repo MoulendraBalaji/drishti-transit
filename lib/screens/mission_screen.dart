@@ -31,9 +31,9 @@ class MissionScreen extends StatelessWidget {
         bottom: false,
         child: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
-            isDesktop ? 32 : 18,
-            16,
-            isDesktop ? 32 : 18,
+            isDesktop ? 32 : 16,
+            isDesktop ? 20 : 12,
+            isDesktop ? 32 : 16,
             isDesktop ? 40 : 100,
           ),
           child: Center(
@@ -43,19 +43,19 @@ class MissionScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(context),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   _buildHeroIntro(context, cc),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   _buildLiveFleetPulse(context, cc),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 22),
                   const SectionHeader('EDGE-TO-MUNICIPAL ARCHITECTURE PIPELINE'),
                   const SizedBox(height: 10),
                   _buildArchitecturePipeline(context),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 22),
                   const SectionHeader('CORE PLATFORM ADVANTAGES · ZERO CAPEX'),
                   const SizedBox(height: 10),
                   _buildPillarsGrid(context),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
                   _buildActionControls(context),
                   const SizedBox(height: 20),
                 ],
@@ -84,7 +84,7 @@ class MissionScreen extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 'AIS-140 / VLTD EDGE SPEC',
-                style: monoTxt(10.5, color: Dp.accent, w: FontWeight.w700, ls: 0.8),
+                style: monoTxt(10, color: Dp.accent, w: FontWeight.w700, ls: 0.8),
               ),
             ],
           ),
@@ -96,8 +96,10 @@ class MissionScreen extends StatelessWidget {
   }
 
   Widget _buildHeroIntro(BuildContext context, CommandCenter cc) {
+    final isDesktop = MediaQuery.sizeOf(context).width >= 720;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isDesktop ? 24 : 16),
       decoration: BoxDecoration(
         color: Dp.card,
         borderRadius: BorderRadius.circular(Dp.rLg),
@@ -114,15 +116,18 @@ class MissionScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'DRISHTI-TRANSIT',
-                style: AppText.displayHero.copyWith(
-                  fontSize: 32,
-                  letterSpacing: -0.6,
+              Flexible(
+                child: Text(
+                  'DRISHTI-TRANSIT',
+                  style: AppText.displayHero.copyWith(
+                    fontSize: isDesktop ? 32 : 22,
+                    letterSpacing: -0.6,
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
@@ -132,7 +137,7 @@ class MissionScreen extends StatelessWidget {
                 ),
                 child: Text(
                   'v1.0-PROTOTYPE',
-                  style: monoTxt(9.5, color: Dp.accent, w: FontWeight.w700, ls: 0.8),
+                  style: monoTxt(9.0, color: Dp.accent, w: FontWeight.w700, ls: 0.8),
                 ),
               ),
             ],
@@ -143,9 +148,10 @@ class MissionScreen extends StatelessWidget {
             style: AppText.displaySection.copyWith(
               color: Dp.inkSoft,
               fontWeight: FontWeight.w600,
+              fontSize: isDesktop ? 16 : 14,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Text(
             'Buses already carry government-mandated cameras (AIS-140 VLTD/CCTV). '
             'Drishti-Transit is the sovereign software layer that converts those routine feeds '
@@ -153,14 +159,14 @@ class MissionScreen extends StatelessWidget {
             'with zero additional hardware, zero road crews, and zero network bloat.',
             style: AppText.body.copyWith(
               color: Dp.textMuted,
-              height: 1.55,
-              fontSize: 14.5,
+              height: 1.5,
+              fontSize: isDesktop ? 14.5 : 13,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _buildBadge('ZERO HARDWARE CAPEX', DGlyph.check),
               _buildBadge('ON-DEVICE EDGE INFERENCE', DGlyph.scan),
@@ -188,7 +194,7 @@ class MissionScreen extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             text,
-            style: monoTxt(10, color: Dp.inkSoft, w: FontWeight.w600, ls: 0.5),
+            style: monoTxt(9.5, color: Dp.inkSoft, w: FontWeight.w600, ls: 0.4),
           ),
         ],
       ),
@@ -196,57 +202,115 @@ class MissionScreen extends StatelessWidget {
   }
 
   Widget _buildLiveFleetPulse(BuildContext context, CommandCenter cc) {
+    final isDesktop = MediaQuery.sizeOf(context).width >= 720;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 20 : 14,
+        vertical: isDesktop ? 16 : 14,
+      ),
       decoration: BoxDecoration(
         color: Dp.field,
         borderRadius: BorderRadius.circular(Dp.rMd),
         border: Border.all(color: Dp.hairline),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: StatBlock(
-              number: '${cc.busesOnline}',
-              label: 'ACTIVE BUS SCANNERS',
-              trend: 'LIVE',
+      child: isDesktop
+          ? Row(
+              children: [
+                Expanded(
+                  child: StatBlock(
+                    number: '${cc.busesOnline}',
+                    label: 'ACTIVE BUS SCANNERS',
+                    trend: 'LIVE',
+                  ),
+                ),
+                Container(width: 1, height: 38, color: Dp.hairline),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 14),
+                    child: StatBlock(
+                      number: '${cc.total}',
+                      label: 'DEFECTS TRIAGED',
+                      color: Dp.accent,
+                      trend: '+${cc.incidents.length > 5 ? 5 : cc.incidents.length}',
+                    ),
+                  ),
+                ),
+                Container(width: 1, height: 38, color: Dp.hairline),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 14),
+                    child: StatBlock(
+                      number: '${cc.coveragePercent}%',
+                      label: 'METRO GRID SURVEYED',
+                    ),
+                  ),
+                ),
+                Container(width: 1, height: 38, color: Dp.hairline),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 14),
+                    child: StatBlock(
+                      number: '11.8ms',
+                      label: 'EDGE LATENCY',
+                      color: Dp.note,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: StatBlock(
+                        number: '${cc.busesOnline}',
+                        label: 'ACTIVE BUS SCANNERS',
+                        trend: 'LIVE',
+                      ),
+                    ),
+                    Container(width: 1, height: 38, color: Dp.hairline),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: StatBlock(
+                          number: '${cc.total}',
+                          label: 'DEFECTS TRIAGED',
+                          color: Dp.accent,
+                          trend: '+${cc.incidents.length > 5 ? 5 : cc.incidents.length}',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Container(height: 1, width: double.infinity, color: Dp.hairline),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: StatBlock(
+                        number: '${cc.coveragePercent}%',
+                        label: 'METRO GRID SURVEYED',
+                      ),
+                    ),
+                    Container(width: 1, height: 38, color: Dp.hairline),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: StatBlock(
+                          number: '11.8ms',
+                          label: 'EDGE LATENCY',
+                          color: Dp.note,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ),
-          Container(width: 1, height: 38, color: Dp.hairline),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 14),
-              child: StatBlock(
-                number: '${cc.total}',
-                label: 'DEFECTS TRIAGED',
-                color: Dp.accent,
-                trend: '+${cc.incidents.length > 5 ? 5 : cc.incidents.length}',
-              ),
-            ),
-          ),
-          Container(width: 1, height: 38, color: Dp.hairline),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 14),
-              child: StatBlock(
-                number: '${cc.coveragePercent}%',
-                label: 'METRO GRID SURVEYED',
-              ),
-            ),
-          ),
-          Container(width: 1, height: 38, color: Dp.hairline),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 14),
-              child: StatBlock(
-                number: '11.8ms',
-                label: 'EDGE LATENCY',
-                color: Dp.note,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -446,8 +510,10 @@ class MissionScreen extends StatelessWidget {
   }
 
   Widget _buildActionControls(BuildContext context) {
+    final isDesktop = MediaQuery.sizeOf(context).width >= 720;
+
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(isDesktop ? 18 : 14),
       decoration: BoxDecoration(
         color: Dp.card,
         borderRadius: BorderRadius.circular(Dp.rMd),
@@ -460,54 +526,110 @@ class MissionScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: isDesktop
+          ? Row(
               children: [
-                Text(
-                  'EXPLORE LIVE SIMULATION',
-                  style: monoTxt(12, color: Dp.accent, w: FontWeight.w700, ls: 0.8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'EXPLORE LIVE SIMULATION',
+                        style: monoTxt(12, color: Dp.accent, w: FontWeight.w700, ls: 0.8),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Trace a real-time detection from the camera bounding box feed to the live city map and analytics.',
+                        style: AppText.bodySmall.copyWith(color: Dp.textMuted),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  'Trace a real-time detection from the camera bounding box feed to the live city map and analytics.',
-                  style: AppText.bodySmall.copyWith(color: Dp.textMuted),
+                const SizedBox(width: 16),
+                TactileButton(
+                  label: 'DETECTION FEED',
+                  icon: DGlyph.camera,
+                  accent: Dp.accent,
+                  dense: false,
+                  onTap: () {
+                    if (onNavigateToTab != null) {
+                      onNavigateToTab!(1);
+                    } else {
+                      context.go('/edge');
+                    }
+                  },
+                ),
+                const SizedBox(width: 10),
+                TactileButton(
+                  label: 'COMMAND MAP',
+                  icon: DGlyph.markRadar,
+                  outline: true,
+                  dense: false,
+                  onTap: () {
+                    if (onNavigateToTab != null) {
+                      onNavigateToTab!(2);
+                    } else {
+                      context.go('/command');
+                    }
+                  },
+                ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'EXPLORE LIVE SIMULATION',
+                      style: monoTxt(11.5, color: Dp.accent, w: FontWeight.w700, ls: 0.8),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Trace a real-time detection from the camera bounding box feed to the live city map and analytics.',
+                      style: AppText.bodySmall.copyWith(color: Dp.textMuted, fontSize: 12),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TactileButton(
+                        label: 'DETECTION',
+                        icon: DGlyph.camera,
+                        accent: Dp.accent,
+                        dense: true,
+                        onTap: () {
+                          if (onNavigateToTab != null) {
+                            onNavigateToTab!(1);
+                          } else {
+                            context.go('/edge');
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TactileButton(
+                        label: 'COMMAND MAP',
+                        icon: DGlyph.markRadar,
+                        outline: true,
+                        dense: true,
+                        onTap: () {
+                          if (onNavigateToTab != null) {
+                            onNavigateToTab!(2);
+                          } else {
+                            context.go('/command');
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 16),
-          TactileButton(
-            label: 'DETECTION FEED',
-            icon: DGlyph.camera,
-            accent: Dp.accent,
-            dense: false,
-            onTap: () {
-              if (onNavigateToTab != null) {
-                onNavigateToTab!(1);
-              } else {
-                context.go('/edge');
-              }
-            },
-          ),
-          const SizedBox(width: 10),
-          TactileButton(
-            label: 'COMMAND MAP',
-            icon: DGlyph.markRadar,
-            outline: true,
-            dense: false,
-            onTap: () {
-              if (onNavigateToTab != null) {
-                onNavigateToTab!(2);
-              } else {
-                context.go('/command');
-              }
-            },
-          ),
-        ],
-      ),
     );
   }
 }

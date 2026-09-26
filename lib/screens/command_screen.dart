@@ -179,16 +179,17 @@ class _CommandScreenState extends State<CommandScreen> {
 
   Widget _buildTopHud(CommandCenter cc) {
     final isDark = cc.isDarkMode;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 720;
 
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        padding: EdgeInsets.fromLTRB(isDesktop ? 16 : 12, isDesktop ? 12 : 8, isDesktop ? 16 : 12, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: EdgeInsets.symmetric(horizontal: isDesktop ? 16 : 12, vertical: isDesktop ? 10 : 8),
               decoration: BoxDecoration(
                 color: isDark
                     ? const Color(0xFF0D1526).withValues(alpha: 0.95)
@@ -207,59 +208,109 @@ class _CommandScreenState extends State<CommandScreen> {
                   ),
                 ],
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Dp.accent.withValues(alpha: 0.12)
-                          : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: isDark
-                            ? Dp.accent.withValues(alpha: 0.4)
-                            : const Color(0xFFCBD5E1),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+              child: isDesktop
+                  ? Row(
                       children: [
-                        const AshokaChakra(size: 13, color: Color(0xFF000080)),
-                        const SizedBox(width: 6),
-                        Text(
-                          'COMMAND RADAR',
-                          style: monoTxt(
-                            10.5,
-                            color: isDark ? Dp.accent : const Color(0xFF0F172A),
-                            w: FontWeight.w700,
-                            ls: 0.8,
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Dp.accent.withValues(alpha: 0.12)
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: isDark
+                                  ? Dp.accent.withValues(alpha: 0.4)
+                                  : const Color(0xFFCBD5E1),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const AshokaChakra(size: 13, color: Color(0xFF000080)),
+                              const SizedBox(width: 6),
+                              Text(
+                                'COMMAND RADAR',
+                                style: monoTxt(
+                                  10.5,
+                                  color: isDark ? Dp.accent : const Color(0xFF0F172A),
+                                  w: FontWeight.w700,
+                                  ls: 0.8,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'पुणे महानगर • PMPML TRANSIT GRID',
+                            style: monoTxt(
+                              10,
+                              color: isDark ? Dp.textMuted : const Color(0xFF475569),
+                              w: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const GovBadge(label: 'NIC-AIS140', dense: true),
+                        const SizedBox(width: 8),
+                        const _ClockTick(),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Dp.accent.withValues(alpha: 0.14)
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(Dp.rFull),
+                            border: Border.all(
+                              color: isDark
+                                  ? Dp.accent.withValues(alpha: 0.4)
+                                  : const Color(0xFFCBD5E1),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const AshokaChakra(size: 12, color: Color(0xFF000080)),
+                              const SizedBox(width: 5),
+                              Text(
+                                'RADAR',
+                                style: monoTxt(
+                                  9.5,
+                                  color: isDark ? Dp.accent : const Color(0xFF0F172A),
+                                  w: FontWeight.w800,
+                                  ls: 0.6,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'PMPML TRANSIT GRID',
+                            style: monoTxt(
+                              9.5,
+                              color: isDark ? Dp.ink : const Color(0xFF334155),
+                              w: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        const _ClockTick(),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'पुणे महानगर • PMPML TRANSIT GRID',
-                      style: monoTxt(
-                        10,
-                        color: isDark ? Dp.textMuted : const Color(0xFF475569),
-                        w: FontWeight.w600,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const GovBadge(label: 'NIC-AIS140', dense: true),
-                  const SizedBox(width: 8),
-                  const _ClockTick(),
-                ],
-              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -278,9 +329,10 @@ class _CommandScreenState extends State<CommandScreen> {
   }
 
   Widget _buildRightControls(CommandCenter cc) {
+    final isDesktop = MediaQuery.sizeOf(context).width >= 720;
     return Positioned(
-      top: 136,
-      right: 14,
+      top: isDesktop ? 136 : 108,
+      right: isDesktop ? 14 : 10,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -559,7 +611,7 @@ class _FeedSheet extends StatelessWidget {
                   onTap: () => onSelect(cc.incidents[i]),
                 ),
               ),
-            const SizedBox(height: 100),
+            const SizedBox(height: 120),
           ],
         ),
       ),
@@ -610,6 +662,7 @@ class _SheetHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final latest = cc.latest;
     final isDark = Dp.isDark;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 720;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
@@ -621,20 +674,12 @@ class _SheetHeader extends StatelessWidget {
               Drishti.icon(DGlyph.feed, size: 15, color: Dp.accent),
               const SizedBox(width: 8),
               Text(
-                'LIVE INCIDENT FEED',
-                style: monoTxt(11, color: Dp.ink, w: FontWeight.w700, ls: 1.0),
+                isDesktop ? 'LIVE INCIDENT FEED' : 'INCIDENTS',
+                style: monoTxt(11, color: Dp.ink, w: FontWeight.w700, ls: 0.8),
               ),
-              const SizedBox(width: 10),
-              _ResizePill(label: 'MIN', onTap: () => _snap(0.20)),
-              const SizedBox(width: 4),
-              _ResizePill(label: 'MID', onTap: () => _snap(0.48)),
-              const SizedBox(width: 4),
-              _ResizePill(label: 'MAX', onTap: () => _snap(0.82)),
-              const Spacer(),
-              const LivePill(dense: true, label: 'INGESTING'),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF162238) : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(Dp.rFull),
@@ -645,12 +690,22 @@ class _SheetHeader extends StatelessWidget {
                 child: Text(
                   '${cc.total}',
                   style: monoTxt(
-                    10.5,
+                    10,
                     color: isDark ? Dp.accent : const Color(0xFF0F172A),
                     w: FontWeight.w700,
                   ),
                 ),
               ),
+              const Spacer(),
+              if (isDesktop) ...[
+                _ResizePill(label: 'MIN', onTap: () => _snap(0.20)),
+                const SizedBox(width: 4),
+              ],
+              _ResizePill(label: 'MID', onTap: () => _snap(0.48)),
+              const SizedBox(width: 4),
+              _ResizePill(label: 'MAX', onTap: () => _snap(0.82)),
+              const SizedBox(width: 6),
+              const LivePill(dense: true, label: 'INGEST'),
             ],
           ),
           if (latest != null) ...[
