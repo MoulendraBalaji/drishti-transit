@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 /// weight, consistent with the mono/data aesthetic. No Material icon font.
 enum DGlyph {
   markRadar,
+  map,
   bus,
   camera,
   pin,
@@ -35,6 +36,12 @@ enum DGlyph {
   sliders,
   play,
   pause,
+  menu,
+  download,
+  clipboard,
+  wrench,
+  history,
+  offlineCloud,
 }
 
 /// Renders a [DGlyph] as a crisp stroked glyph.
@@ -104,15 +111,21 @@ class _DrishtiGlyphPainter extends CustomPainter {
 
     switch (glyph) {
       case DGlyph.markRadar:
-        line(const Offset(1.5, 0.2), const Offset(1.5, 0.12));
-        line(const Offset(0.0, 0.0), const Offset(1.0, 0.0));
-        canvas.drawArc(
-            Rect.fromCenter(center: const Offset(0.8, 0.8) * s, width: s, height: s),
-            -0.6, 1.9, false, arcPaint);
-        canvas.drawArc(
-            Rect.fromCenter(center: const Offset(0.5, 0.5) * s, width: s * 1.5, height: s * 1.5),
-            -0.4, 0.6, false, arcPaint);
-        dot(const Offset(0.5, 0.5), 0.09);
+      case DGlyph.map:
+        poly(const [
+          Offset(0.12, 0.22),
+          Offset(0.38, 0.12),
+          Offset(0.62, 0.22),
+          Offset(0.88, 0.12),
+          Offset(0.88, 0.78),
+          Offset(0.62, 0.88),
+          Offset(0.38, 0.78),
+          Offset(0.12, 0.88),
+          Offset(0.12, 0.22),
+        ]);
+        line(const Offset(0.38, 0.12), const Offset(0.38, 0.78));
+        line(const Offset(0.62, 0.22), const Offset(0.62, 0.88));
+        dot(const Offset(0.50, 0.50), 0.055);
         break;
       case DGlyph.bus:
         poly(const [
@@ -324,6 +337,61 @@ class _DrishtiGlyphPainter extends CustomPainter {
       case DGlyph.pause:
         line(const Offset(0.36, 0.20), const Offset(0.36, 0.80));
         line(const Offset(0.64, 0.20), const Offset(0.64, 0.80));
+        break;
+      case DGlyph.menu:
+        line(const Offset(0.18, 0.28), const Offset(0.82, 0.28));
+        line(const Offset(0.18, 0.50), const Offset(0.82, 0.50));
+        line(const Offset(0.18, 0.72), const Offset(0.82, 0.72));
+        break;
+      case DGlyph.download:
+        line(const Offset(0.50, 0.16), const Offset(0.50, 0.62));
+        poly(const [Offset(0.32, 0.46), Offset(0.50, 0.64), Offset(0.68, 0.46)]);
+        poly(const [Offset(0.20, 0.72), Offset(0.20, 0.84), Offset(0.80, 0.84), Offset(0.80, 0.72)]);
+        break;
+      case DGlyph.clipboard:
+        poly(const [
+          Offset(0.30, 0.20),
+          Offset(0.22, 0.20),
+          Offset(0.22, 0.88),
+          Offset(0.78, 0.88),
+          Offset(0.78, 0.20),
+          Offset(0.70, 0.20),
+        ]);
+        poly(const [
+          Offset(0.30, 0.20),
+          Offset(0.30, 0.12),
+          Offset(0.70, 0.12),
+          Offset(0.70, 0.20),
+          Offset(0.30, 0.20),
+        ]);
+        line(const Offset(0.34, 0.42), const Offset(0.66, 0.42));
+        line(const Offset(0.34, 0.58), const Offset(0.66, 0.58));
+        line(const Offset(0.34, 0.74), const Offset(0.54, 0.74));
+        break;
+      case DGlyph.wrench:
+        poly(const [
+          Offset(0.75, 0.15),
+          Offset(0.85, 0.25),
+          Offset(0.70, 0.40),
+          Offset(0.30, 0.80),
+          Offset(0.20, 0.70),
+          Offset(0.60, 0.30),
+          Offset(0.75, 0.15),
+        ]);
+        circle(const Offset(0.25, 0.75), 0.06);
+        break;
+      case DGlyph.history:
+        circle(const Offset(0.50, 0.52), 0.34);
+        line(const Offset(0.50, 0.52), const Offset(0.50, 0.32));
+        line(const Offset(0.50, 0.52), const Offset(0.66, 0.52));
+        poly(const [Offset(0.22, 0.22), Offset(0.18, 0.38), Offset(0.34, 0.38)]);
+        break;
+      case DGlyph.offlineCloud:
+        circle(const Offset(0.42, 0.46), 0.20);
+        circle(const Offset(0.64, 0.54), 0.16);
+        circle(const Offset(0.30, 0.60), 0.14);
+        line(const Offset(0.16, 0.72), const Offset(0.78, 0.72));
+        line(const Offset(0.22, 0.22), const Offset(0.78, 0.78));
         break;
     }
   }

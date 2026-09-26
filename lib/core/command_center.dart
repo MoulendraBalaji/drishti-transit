@@ -157,6 +157,145 @@ class CommandCenter extends ChangeNotifier with WidgetsBindingObserver {
     return null;
   }
 
+  // --- Mobile Field Operations & Route Scope ---
+  String _mobileAssignedRoute = 'ROUTE 12';
+  String get mobileAssignedRoute => _mobileAssignedRoute;
+  void setMobileAssignedRoute(String route) {
+    _mobileAssignedRoute = route;
+    notifyListeners();
+  }
+
+  List<String> get availableRoutes => const [
+    'ROUTE 12',
+    'ROUTE 08',
+    'ROUTE 04',
+    'ROUTE 19',
+    'ROUTE 27',
+  ];
+
+  /// Mobile only sees alerts on their assigned route/zone — never the whole city fleet!
+  List<DetectionEvent> get mobileRouteIncidents => _incidents
+      .where((e) => e.busRoute.toUpperCase() == _mobileAssignedRoute.toUpperCase())
+      .toList();
+
+  /// Personal activity log for field worker
+  List<DetectionEvent> get myResolvedToday => _incidents
+      .where((e) => e.status == IncidentStatus.resolved)
+      .toList();
+
+  // --- Offline Tolerance & Queue ---
+  bool _isFieldOffline = false;
+  bool get isFieldOffline => _isFieldOffline;
+  final List<VoidCallback> _offlineQueue = [];
+  int get pendingSyncCount => _offlineQueue.length;
+
+  void toggleFieldOffline() {
+    _isFieldOffline = !_isFieldOffline;
+    if (!_isFieldOffline && _offlineQueue.isNotEmpty) {
+      syncOfflineQueue();
+    }
+    notifyListeners();
+  }
+
+  void syncOfflineQueue() {
+    final actions = List<VoidCallback>.from(_offlineQueue);
+    _offlineQueue.clear();
+    for (final act in actions) {
+      act();
+    }
+    notifyListeners();
+  }
+
+  // --- Web Assign Action (Web ASSIGNS to maintenance crew) ---
+  void assignIncident(String id, String crewName) {
+    final index = _incidents.indexWhere((e) => e.id == id);
+    if (index != -1) {
+      _incidents[index] = _incidents[index].copyWith(
+        status: IncidentStatus.assigned,
+        assignedCrew: crewName,
+      );
+      notifyListeners();
+    }
+  }
+
+  // --- Mobile Verify Action (Field crew confirms/rejects on-site) ---
+  void verifyIncident(String id, {required bool confirmed}) {
+    if (_isFieldOffline) {
+      _offlineQueue.add(() => verifyIncident(id, confirmed: confirmed));
+      notifyListeners();
+      return;
+    }
+    final index = _incidents.indexWhere((e) => e.id == id);
+    if (index != -1) {
+      _incidents[index] = _incidents[index].copyWith(
+        status: IncidentStatus.verified,
+        verifyVerdict: confirmed ? 'Confirmed road defect on-site' : 'False positive / Surface debris',
+      );
+      notifyListeners();
+    }
+  }
+
+  // --- Mobile Resolve Action (Field crew marks repaired & closed) ---
+  void resolveIncident(String id, {String? remark}) {
+    if (_isFieldOffline) {
+      _offlineQueue.add(() => resolveIncident(id, remark: remark));
+      notifyListeners();
+      return;
+    }
+    final index = _incidents.indexWhere((e) => e.id == id);
+    if (index != -1) {
+      _incidents[index] = _incidents[index].copyWith(
+        status: IncidentStatus.resolved,
+        resolutionNote: remark ?? 'Cold-mix asphalt patched & sealed',
+        resolvedAt: DateTime.now(),
+      );
+      notifyListeners();
+    }
+  }
+
+  // --- Mobile Human-in-the-Loop Manual Flag ---
+  void addManualFlag({
+    required DetectionKind kind,
+    required String note,
+    required double lat,
+    required double lng,
+    required String route,
+  }) {
+    if (_isFieldOffline) {
+      _offlineQueue.add(() => addManualFlag(
+            kind: kind,
+            note: note,
+            lat: lat,
+            lng: lng,
+            route: route,
+          ));
+      notifyListeners();
+      return;
+    }
+
+    final manualEvent = DetectionEvent(
+      id: 'MAN-${DateTime.now().millisecondsSinceEpoch % 10000}',
+      kind: kind,
+      severity: kind.baseSeverity,
+      confidence: 1.0,
+      lat: lat,
+      lng: lng,
+      ts: DateTime.now(),
+      busId: 'FIELD-CREW-04',
+      busRoute: route,
+      corridorId: 'CORR-01',
+      sceneSeed: 8888,
+      sceneTime: 0,
+      status: IncidentStatus.verified,
+      verifyVerdict: 'Manual field observation: $note',
+      isManualFlag: true,
+      assignedCrew: 'Field Crew 04 (You)',
+    );
+
+    _ingest(manualEvent);
+    notifyListeners();
+  }
+
   bool get isLive => _total > 0;
 
   int get coveragePercent {
@@ -171,7 +310,27 @@ class CommandCenter extends ChangeNotifier with WidgetsBindingObserver {
 
     // Seed recent history so pins/heat/feed/charts feel alive on first frame.
     final history = _svc.seedHistory();
-    for (final e in history) {
+    for (var i = 0; i < history.length; i++) {
+      var e = history[i];
+      if (i == 1) {
+        e = e.copyWith(
+          status: IncidentStatus.assigned,
+          assignedCrew: 'PWD Field Crew 04 (You)',
+        );
+      } else if (i == 2) {
+        e = e.copyWith(
+          status: IncidentStatus.verified,
+          assignedCrew: 'PWD Field Crew 04 (You)',
+          verifyVerdict: 'Confirmed on-site defect',
+        );
+      } else if (i == 4) {
+        e = e.copyWith(
+          status: IncidentStatus.resolved,
+          assignedCrew: 'PWD Field Crew 04 (You)',
+          resolutionNote: 'Cold-mix asphalt patch applied',
+          resolvedAt: DateTime.now().subtract(const Duration(hours: 2)),
+        );
+      }
       _ingest(e, seed: true);
     }
   }

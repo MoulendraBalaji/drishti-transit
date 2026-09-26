@@ -149,13 +149,17 @@ class TactileButton extends StatelessWidget {
             Drishti.icon(icon!, size: dense ? 14 : 16, color: fg, stroke: 1.8),
             SizedBox(width: dense ? 6 : 8),
           ],
-          Text(
-            label,
-            style: AppText.label.copyWith(
-              color: fg,
-              fontSize: dense ? 11.5 : 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.4,
+          Flexible(
+            child: Text(
+              label,
+              style: AppText.label.copyWith(
+                color: fg,
+                fontSize: dense ? 11.5 : 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],

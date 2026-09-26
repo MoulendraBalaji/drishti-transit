@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../app/palette.dart';
 
 /// Detection types the edge-AI recognises on a moving bus.
@@ -82,6 +84,31 @@ extension DetectionKindX on DetectionKind {
   }
 }
 
+/// Status pipeline for incident triage across Web & Mobile:
+/// NEW -> ASSIGNED (by Web) -> VERIFIED (by Mobile) -> RESOLVED (by Mobile)
+enum IncidentStatus {
+  newAlert,
+  assigned,
+  verified,
+  resolved,
+}
+
+extension IncidentStatusX on IncidentStatus {
+  String get label => switch (this) {
+        IncidentStatus.newAlert => 'NEW',
+        IncidentStatus.assigned => 'ASSIGNED',
+        IncidentStatus.verified => 'VERIFIED',
+        IncidentStatus.resolved => 'RESOLVED',
+      };
+
+  Color get color => switch (this) {
+        IncidentStatus.newAlert => const Color(0xFFFF9933),
+        IncidentStatus.assigned => const Color(0xFF38BDF8),
+        IncidentStatus.verified => const Color(0xFFA855F7),
+        IncidentStatus.resolved => const Color(0xFF10B981),
+      };
+}
+
 /// A single detection emitted by the simulated edge-AI, carrying everything the
 /// rest of the product needs (map pin, feed row, analytics, evidence frame).
 class DetectionEvent {
@@ -102,6 +129,12 @@ class DetectionEvent {
     this.trackId,
     this.speedKmh,
     this.distanceM,
+    this.status = IncidentStatus.newAlert,
+    this.assignedCrew,
+    this.verifyVerdict,
+    this.resolutionNote,
+    this.resolvedAt,
+    this.isManualFlag = false,
   });
 
   final String id;
@@ -123,6 +156,14 @@ class DetectionEvent {
   final double? speedKmh;
   final double? distanceM;
 
+  // Lifecycle state shared between Web (Assign) and Mobile (Verify & Resolve)
+  final IncidentStatus status;
+  final String? assignedCrew;
+  final String? verifyVerdict;
+  final String? resolutionNote;
+  final DateTime? resolvedAt;
+  final bool isManualFlag;
+
   String get gpsLabel => '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}';
 
   String get timeLabel {
@@ -141,6 +182,40 @@ class DetectionEvent {
 
   String get summary =>
       '${kind.label} ${plate != null ? '· $plate' : ''}';
+
+  DetectionEvent copyWith({
+    IncidentStatus? status,
+    String? assignedCrew,
+    String? verifyVerdict,
+    String? resolutionNote,
+    DateTime? resolvedAt,
+    bool? isManualFlag,
+  }) {
+    return DetectionEvent(
+      id: id,
+      kind: kind,
+      severity: severity,
+      confidence: confidence,
+      lat: lat,
+      lng: lng,
+      ts: ts,
+      busId: busId,
+      busRoute: busRoute,
+      corridorId: corridorId,
+      sceneSeed: sceneSeed,
+      sceneTime: sceneTime,
+      plate: plate,
+      trackId: trackId,
+      speedKmh: speedKmh,
+      distanceM: distanceM,
+      status: status ?? this.status,
+      assignedCrew: assignedCrew ?? this.assignedCrew,
+      verifyVerdict: verifyVerdict ?? this.verifyVerdict,
+      resolutionNote: resolutionNote ?? this.resolutionNote,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
+      isManualFlag: isManualFlag ?? this.isManualFlag,
+    );
+  }
 }
 
 /// A connected bus acting as an edge sensor.

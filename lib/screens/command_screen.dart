@@ -230,7 +230,7 @@ class _CommandScreenState extends State<CommandScreen> {
                               const AshokaChakra(size: 13, color: Color(0xFF000080)),
                               const SizedBox(width: 6),
                               Text(
-                                'COMMAND RADAR',
+                                'COMMAND MAP',
                                 style: monoTxt(
                                   10.5,
                                   color: isDark ? Dp.accent : const Color(0xFF0F172A),
@@ -281,7 +281,7 @@ class _CommandScreenState extends State<CommandScreen> {
                               const AshokaChakra(size: 12, color: Color(0xFF000080)),
                               const SizedBox(width: 5),
                               Text(
-                                'RADAR',
+                                'MAP',
                                 style: monoTxt(
                                   9.5,
                                   color: isDark ? Dp.accent : const Color(0xFF0F172A),
