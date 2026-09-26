@@ -3,30 +3,31 @@ import 'package:go_router/go_router.dart';
 
 import '../app/motion.dart';
 
-/// Route choreography kinds — one hand, used across all navigation.
+/// Route choreography kinds for Drishti-Transit.
 enum RouteKind {
-  /// Tab-root entry: settle up and in.
+  /// Tab switch or root screen entry: subtle upward slide + scale + fade.
   enter,
 
-  /// Pushed detail: lift + settle, the product's signature push.
+  /// Detail or modal focus: calibrated lift + settle.
   zoomIn,
 
-  /// Boot / exit states.
+  /// Instant fade for splash or state reset.
   iris,
 }
 
-/// The single custom [Page] type used by every go_router pageBuilder,
-/// replacing default Material transitions app-wide. Backed by go_router's own
-/// [CustomTransitionPage], which builds a real declarative [Page] with a
-/// bespoke transition vocabulary threaded through [transitionsBuilder].
+/// The single custom [Page] type used by go_router across the entire app.
+/// Eliminates default Android slide-up and default Material fade completely.
+/// Implements the hand-tuned motion signature:
+/// subtle scale (0.985 -> 1.0) + fade (0.0 -> 1.0) + slight vertical slide (0.025 -> 0.0)
+/// powered by [Mo.easeTech] (Cubic(0.2, 0.0, 0.0, 1.0)).
 class DrishtiRoute<T> extends CustomTransitionPage<T> {
   DrishtiRoute({
     required WidgetBuilder builder,
-    this.kind = RouteKind.zoomIn,
+    this.kind = RouteKind.enter,
   }) : super(
           child: Builder(builder: builder),
-          transitionsBuilder: (context, animation, secondary, child) =>
-              _transitionFor(kind, animation, child),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              _buildTransition(kind, animation, child),
           transitionDuration: _durationFor(kind, reverse: false),
           reverseTransitionDuration: _durationFor(kind, reverse: true),
           maintainState: true,
@@ -41,47 +42,57 @@ class DrishtiRoute<T> extends CustomTransitionPage<T> {
     if (reverse) return Mo.fast;
     return switch (k) {
       RouteKind.enter => Mo.standard,
-      RouteKind.zoomIn => Mo.scene + const Duration(milliseconds: 60),
-      RouteKind.iris => Mo.scene,
+      RouteKind.zoomIn => Mo.scene,
+      RouteKind.iris => Mo.standard,
     };
   }
 
-  static Widget _transitionFor(
-      RouteKind kind, Animation<double> animation, Widget? child) {
+  static Widget _buildTransition(
+    RouteKind kind,
+    Animation<double> animation,
+    Widget? child,
+  ) {
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve: Mo.easeTech,
+      reverseCurve: Mo.easeInTech,
+    );
+
     switch (kind) {
       case RouteKind.enter:
         return FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Mo.easeInOutTech),
+          opacity: curved,
           child: SlideTransition(
             position: Tween<Offset>(
-              begin: const Offset(0, 0.025),
+              begin: const Offset(0.0, 0.022),
               end: Offset.zero,
-            ).animate(
-                CurvedAnimation(parent: animation, curve: Mo.easeOutTech)),
-            child: child,
-          ),
-        );
-      case RouteKind.iris:
-        return FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Mo.easeInOutTech),
-          child: child,
-        );
-      case RouteKind.zoomIn:
-        return FadeTransition(
-          opacity:
-              CurvedAnimation(parent: animation, curve: Mo.easeOutTech),
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.035),
-              end: Offset.zero,
-            ).animate(
-                CurvedAnimation(parent: animation, curve: Mo.easeOutTech)),
+            ).animate(curved),
             child: ScaleTransition(
-              scale: Tween<double>(begin: 0.984, end: 1).animate(CurvedAnimation(
-                  parent: animation, curve: Mo.easeOutTech)),
+              scale: Tween<double>(begin: 0.988, end: 1.0).animate(curved),
               child: child,
             ),
           ),
+        );
+
+      case RouteKind.zoomIn:
+        return FadeTransition(
+          opacity: curved,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.0, 0.035),
+              end: Offset.zero,
+            ).animate(curved),
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.975, end: 1.0).animate(curved),
+              child: child,
+            ),
+          ),
+        );
+
+      case RouteKind.iris:
+        return FadeTransition(
+          opacity: curved,
+          child: child,
         );
     }
   }

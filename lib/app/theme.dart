@@ -3,52 +3,52 @@ import 'package:flutter/material.dart';
 import 'palette.dart';
 import 'typography.dart';
 
-/// Builds the Drishti ThemeData according to DESIGN-mobbin.md:
-/// Light: gallery-white canvas (#FFFFFF), near-black ink (#121417), stadium-pill controls, electric blue accent.
-/// Dark: obsidian charcoal canvas (#0D1117), crisp white ink (#F0F6FC), elevated cards (#161B22), hairline borders (#30363D).
-ThemeData buildDrishtiTheme({bool isDark = false}) {
-  final bg = isDark ? const Color(0xFF0D1117) : const Color(0xFFFFFFFF);
-  final surface = isDark ? const Color(0xFF161B22) : const Color(0xFFFFFFFF);
-  final ink = isDark ? const Color(0xFFF0F6FC) : const Color(0xFF121417);
-  final onPrimary = isDark ? const Color(0xFF0D1117) : const Color(0xFFFFFFFF);
-  final border = isDark ? const Color(0xFF30363D) : const Color(0xFFE2E4E8);
-  final hover = isDark ? const Color(0xFF21262D) : const Color(0xFFF7F8FA);
+/// Builds the Drishti-Transit ThemeData:
+/// Restrained, dark command-center aesthetic.
+/// Deep navy/ink base (#090E17), crisp slate borders (#1F2F4A),
+/// electric cyan live accent (#00F5D4), and no Material 3 defaults.
+ThemeData buildDrishtiTheme({bool isDark = true}) {
+  final bg = isDark ? const Color(0xFF090E17) : const Color(0xFFF4F6F9);
+  final surface = isDark ? const Color(0xFF0F172A) : const Color(0xFFFFFFFF);
+  final cardBg = isDark ? const Color(0xFF111C2E) : const Color(0xFFFFFFFF);
+  final ink = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
+  final border = isDark ? const Color(0xFF1F2F4A) : const Color(0xFFD3DBE5);
+  final hover = isDark ? const Color(0xFF162238) : const Color(0xFFE9EDF2);
 
   final base = ThemeData(
     brightness: isDark ? Brightness.dark : Brightness.light,
     useMaterial3: true,
     scaffoldBackgroundColor: bg,
     fontFamily: AppText.sans,
-    splashFactory: InkSparkle.splashFactory,
     colorScheme: isDark
         ? ColorScheme.dark(
-            primary: ink,
-            onPrimary: onPrimary,
+            primary: Dp.accent,
+            onPrimary: const Color(0xFF090E17),
             surface: surface,
-            onSurface: ink,
+            onSurface: const Color(0xFFF1F5F9),
             error: Dp.critical,
             onError: Colors.white,
           )
         : ColorScheme.light(
-            primary: ink,
-            onPrimary: onPrimary,
+            primary: const Color(0xFF0284C7),
+            onPrimary: Colors.white,
             surface: surface,
-            onSurface: ink,
+            onSurface: const Color(0xFF0F172A),
             error: Dp.critical,
             onError: Colors.white,
           ),
     textSelectionTheme: const TextSelectionThemeData(
       cursorColor: Dp.accent,
-      selectionColor: Color(0x330066FF),
+      selectionColor: Color(0x3300F5D4),
       selectionHandleColor: Dp.accent,
     ),
     dividerColor: border,
     cardTheme: CardThemeData(
-      color: surface,
+      color: cardBg,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Dp.rMd),
-        side: BorderSide(color: border),
+        side: BorderSide(color: border, width: 1.0),
       ),
     ),
     splashColor: Colors.transparent,

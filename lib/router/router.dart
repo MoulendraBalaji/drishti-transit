@@ -3,39 +3,53 @@ import 'package:go_router/go_router.dart';
 
 import '../screens/analytics_screen.dart';
 import '../screens/command_screen.dart';
-import '../screens/incident_detail_screen.dart';
-import '../screens/onboard_screen.dart';
+import '../screens/detection_feed_screen.dart';
+import '../screens/mission_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/shell.dart';
-import '../screens/splash_screen.dart';
 import '../ui/transitions.dart';
 
-/// Drishti navigation — one custom page type ([DrishtiRoute]) everywhere so
-/// no default Material transition ever appears, and a self-made three-tab
-/// dock (StatefulShellRoute keeps each tab's state alive).
+/// Drishti-Transit router — 4 screens, nothing more:
+/// A) Home / Mission (/mission)
+/// B) Detection Feed (/feed)
+/// C) Command Map (/map)
+/// D) Analytics (/analytics)
+///
+/// Backed by StatefulShellRoute.indexedStack to preserve state between tabs,
+/// and DrishtiRoute for custom scale+fade+vertical slide transitions app-wide.
 class AppRouter {
   AppRouter._();
 
-  static const String command = '/command';
-  static const String edge = '/edge';
-  static const String insight = '/insight';
-  static const String settings = '/settings';
-  static const String incident = '/command/incident/:id';
+  static const String mission = '/mission';
+  static const String feed = '/feed';
+  static const String map = '/map';
+  static const String analytics = '/analytics';
 
   static GoRouter build({required GlobalKey<NavigatorState> rootNavKey}) {
     return GoRouter(
       navigatorKey: rootNavKey,
-      initialLocation: '/',
+      initialLocation: mission,
       routes: [
+        // Redirect root directly to Mission
         GoRoute(
           path: '/',
-          pageBuilder: (context, state) => DrishtiRoute(
-            kind: RouteKind.iris,
-            builder: (_) => const SplashScreen(),
-          ),
+          redirect: (_, _) => mission,
+        ),
+        // Aliases for compatibility
+        GoRoute(
+          path: '/command',
+          redirect: (_, _) => map,
         ),
         GoRoute(
-          path: settings,
+          path: '/edge',
+          redirect: (_, _) => feed,
+        ),
+        GoRoute(
+          path: '/insight',
+          redirect: (_, _) => analytics,
+        ),
+        GoRoute(
+          path: '/settings',
           pageBuilder: (context, state) => DrishtiRoute(
             kind: RouteKind.zoomIn,
             builder: (_) => const SettingsScreen(),
@@ -44,42 +58,51 @@ class AppRouter {
         StatefulShellRoute.indexedStack(
           builder: (context, state, shell) => AppShell(shell: shell),
           branches: [
+            // Branch 0: Screen A — Home / Mission
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: command,
+                  path: mission,
+                  pageBuilder: (context, state) => DrishtiRoute(
+                    kind: RouteKind.enter,
+                    builder: (_) => MissionScreen(
+                      onNavigateToTab: (index) {
+                        // handled via shell
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // Branch 1: Screen B — Detection Feed
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: feed,
+                  pageBuilder: (context, state) => DrishtiRoute(
+                    kind: RouteKind.enter,
+                    builder: (_) => const DetectionFeedScreen(),
+                  ),
+                ),
+              ],
+            ),
+            // Branch 2: Screen C — Command Map
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: map,
                   pageBuilder: (context, state) => DrishtiRoute(
                     kind: RouteKind.enter,
                     builder: (_) => const CommandScreen(),
                   ),
-                  routes: [
-                    GoRoute(
-                      path: 'incident/:id',
-                      pageBuilder: (context, state) => DrishtiRoute(
-                        kind: RouteKind.zoomIn,
-                        builder: (_) => IncidentDetailScreen(
-                            id: state.pathParameters['id']!),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
+            // Branch 3: Screen D — Analytics
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: edge,
-                  pageBuilder: (context, state) => DrishtiRoute(
-                    kind: RouteKind.enter,
-                    builder: (_) => const OnboardScreen(),
-                  ),
-                ),
-              ],
-            ),
-            StatefulShellBranch(
-              routes: [
-                GoRoute(
-                  path: insight,
+                  path: analytics,
                   pageBuilder: (context, state) => DrishtiRoute(
                     kind: RouteKind.enter,
                     builder: (_) => const AnalyticsScreen(),

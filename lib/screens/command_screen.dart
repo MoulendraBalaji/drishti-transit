@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
@@ -15,11 +14,20 @@ import '../core/models.dart';
 import '../core/sim.dart';
 import '../ui/chrome.dart';
 import '../ui/glyphs.dart';
+import '../ui/gov_masthead.dart';
 import '../ui/map_overlays.dart';
+import '../ui/tactile.dart';
 
-/// Central Command map — Mobbin Gallery-White design language.
-/// Live fleet tracking, incident pins with crystal clarity, a togglable
-/// heat layer, arrival ripples, and the draggable operations feed sheet.
+/// Screen C: Command Map
+///
+/// Central Command operations map:
+/// - Real-time fleet tracking & moving bus markers
+/// - Live incident pins landing dynamically
+/// - Designed GPS pulse/ripple on arrival (CustomPainter + ticker)
+/// - Toggleable congestion heatmap layer
+/// - Corridors toggle
+/// - Draggable bottom sheet operations feed with staggered slide-in rows
+/// - In-place incident inspector modal
 class CommandScreen extends StatefulWidget {
   const CommandScreen({super.key});
 
@@ -50,71 +58,70 @@ class _CommandScreenState extends State<CommandScreen> {
   Widget build(BuildContext context) {
     final cc = context.watch<CommandCenter>();
     _onAlertChanged(cc);
+
     return ColoredBox(
       color: Dp.canvas,
       child: Stack(
         children: [
-          _mapView(cc),
+          _buildMapView(cc),
           Positioned.fill(
             child: DraggableScrollableSheet(
               controller: _sheetController,
-              initialChildSize: 0.18,
-              minChildSize: 0.10,
+              initialChildSize: 0.20,
+              minChildSize: 0.12,
               maxChildSize: 0.85,
               snap: true,
-              snapSizes: const [0.18, 0.45, 0.80],
+              snapSizes: const [0.20, 0.48, 0.82],
               builder: (context, scroll) => _FeedSheet(
                 cc: cc,
                 scroll: scroll,
                 controller: _sheetController,
-                onSelect: (e) => _openDetail(e),
+                onSelect: (e) => _inspectIncident(context, e),
               ),
             ),
           ),
-          _topHud(cc),
-          _rightControls(cc),
+          _buildTopHud(cc),
+          _buildRightControls(cc),
           const Positioned(left: 14, bottom: 84, child: _MapAttribution()),
         ],
       ),
     );
   }
 
-  void _openDetail(DetectionEvent e) {
+  void _inspectIncident(BuildContext context, DetectionEvent e) {
     HapticFeedback.mediumImpact();
-    context.push('/incident/${e.id}');
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _IncidentInspectorSheet(event: e),
+    );
   }
 
-  Widget _mapView(CommandCenter cc) {
+  Widget _buildMapView(CommandCenter cc) {
     final corridors = SimWorld.corridors();
+    final isDark = cc.isDarkMode;
+
     return FlutterMap(
       mapController: _map,
       options: MapOptions(
         initialCenter: const LatLng(SimWorld.cityLat, SimWorld.cityLng),
-        initialZoom: 12.6,
+        initialZoom: 12.8,
         minZoom: 10,
         maxZoom: 18,
         interactionOptions: const InteractionOptions(
           flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
         ),
-        backgroundColor: Dp.canvasSoft,
+        backgroundColor: isDark ? const Color(0xFF090E17) : const Color(0xFFE2E8F0),
       ),
       children: [
-        // Smooth Carto Voyager (light) base layer with caching
+        // OpenStreetMap Basemap — Natural, live street grid with zero watermark/API key text
         TileLayer(
-          key: const ValueKey('carto_voyager'),
-          urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-          subdomains: const ['a', 'b', 'c', 'd'],
+          key: ValueKey(isDark ? 'osm_dark' : 'osm_light'),
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'in.drishti.transit',
           maxZoom: 19,
         ),
-        if (cc.isDarkMode)
-          TileLayer(
-            key: const ValueKey('carto_dark'),
-            urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-            subdomains: const ['a', 'b', 'c', 'd'],
-            userAgentPackageName: 'in.drishti.transit',
-            maxZoom: 19,
-          ),
         if (cc.showCorridors)
           PolylineLayer(
             polylines: [
@@ -124,9 +131,10 @@ class _CommandScreenState extends State<CommandScreen> {
                     for (final (lat, lng) in corridors[i].geo)
                       LatLng(lat, lng),
                   ],
-                  color: Dp.accent.withValues(
-                      alpha: 0.35 + (i % 3) * 0.08),
-                  strokeWidth: 2.8,
+                  color: isDark
+                      ? Dp.accent.withValues(alpha: 0.40 + (i % 3) * 0.10)
+                      : const Color(0xFF0284C7).withValues(alpha: 0.50 + (i % 3) * 0.10),
+                  strokeWidth: 3.0,
                 ),
             ],
           ),
@@ -154,7 +162,7 @@ class _CommandScreenState extends State<CommandScreen> {
                 alignment: Alignment.bottomCenter,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => _openDetail(cc.incidents[i]),
+                  onTap: () => _inspectIncident(context, cc.incidents[i]),
                   child: IncidentPin(
                     event: cc.incidents[i],
                     newest: i == 0,
@@ -169,7 +177,9 @@ class _CommandScreenState extends State<CommandScreen> {
     );
   }
 
-  Widget _topHud(CommandCenter cc) {
+  Widget _buildTopHud(CommandCenter cc) {
+    final isDark = cc.isDarkMode;
+
     return SafeArea(
       bottom: false,
       child: Padding(
@@ -180,106 +190,84 @@ class _CommandScreenState extends State<CommandScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: Dp.canvas.withValues(alpha: 0.94),
+                color: isDark
+                    ? const Color(0xFF0D1526).withValues(alpha: 0.95)
+                    : const Color(0xFFFFFFFF).withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(Dp.rFull),
-                border: Border.all(color: Dp.hairline),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF1E2F4C) : const Color(0xFFCBD5E1),
+                  width: 1.2,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 12,
-                    offset: const Offset(0, 3),
+                    color: (isDark ? Colors.black : const Color(0xFF64748B))
+                        .withValues(alpha: isDark ? 0.4 : 0.15),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: Row(
                 children: [
-                  Expanded(
-                    child: GestureDetector(
-                      key: const ValueKey('command_settings_button'),
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        context.push('/settings');
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 28,
-                            height: 28,
-                            clipBehavior: Clip.antiAlias,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Dp.hairline, width: 1.2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.12),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                            child: Image.asset(
-                              'assets/images/dristhi.jpeg',
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Drishti.icon(DGlyph.bus, size: 16),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'DRISHTI',
-                                      style: AppText.label.copyWith(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 13,
-                                        letterSpacing: 0.8,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Drishti.icon(DGlyph.settings, size: 11, color: Dp.textFaint),
-                                  ],
-                                ),
-                                Text(
-                                  'LIVE OPERATIONS',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppText.dataTiny.copyWith(
-                                    color: Dp.textMuted,
-                                    fontSize: 8.5,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Dp.accent.withValues(alpha: 0.12)
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: isDark
+                            ? Dp.accent.withValues(alpha: 0.4)
+                            : const Color(0xFFCBD5E1),
                       ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const AshokaChakra(size: 13, color: Color(0xFF000080)),
+                        const SizedBox(width: 6),
+                        Text(
+                          'COMMAND RADAR',
+                          style: monoTxt(
+                            10.5,
+                            color: isDark ? Dp.accent : const Color(0xFF0F172A),
+                            w: FontWeight.w700,
+                            ls: 0.8,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const LivePill(dense: true),
-                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'पुणे महानगर • PMPML TRANSIT GRID',
+                      style: monoTxt(
+                        10,
+                        color: isDark ? Dp.textMuted : const Color(0xFF475569),
+                        w: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const GovBadge(label: 'NIC-AIS140', dense: true),
+                  const SizedBox(width: 8),
                   const _ClockTick(),
                 ],
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _MiniStat('ALERTS', '${cc.total}'.padLeft(3, '0')),
-                  _MiniStat('FLEET', '${cc.busesOnline}'.padLeft(2, '0')),
-                  _MiniStat('COVERAGE', '${cc.coveragePercent}%'),
-                  _MiniStat('NODES', '42/42'),
+                  _MiniStat('LIVE ALERTS', '${cc.total}'.padLeft(3, '0'), Dp.accent),
+                  _MiniStat('BUSES ONLINE', '${cc.busesOnline}'.padLeft(2, '0'), Dp.ink),
+                  _MiniStat('GRID SURVEYED', '${cc.coveragePercent}%', Dp.note),
+                  _MiniStat('CORRIDORS', '8/8 MONITORED', Dp.saffron),
                 ],
               ),
             ),
@@ -289,7 +277,7 @@ class _CommandScreenState extends State<CommandScreen> {
     );
   }
 
-  Widget _rightControls(CommandCenter cc) {
+  Widget _buildRightControls(CommandCenter cc) {
     return Positioned(
       top: 136,
       right: 14,
@@ -309,7 +297,7 @@ class _CommandScreenState extends State<CommandScreen> {
           _LayerToggle(
             glyph: DGlyph.route,
             active: cc.showCorridors,
-            label: 'ROUTE',
+            label: 'CORRIDOR',
             onTap: () {
               HapticFeedback.selectionClick();
               cc.toggleCorridors();
@@ -324,7 +312,7 @@ class _CommandScreenState extends State<CommandScreen> {
               HapticFeedback.mediumImpact();
               _map.move(
                 const LatLng(SimWorld.cityLat, SimWorld.cityLng),
-                12.6,
+                12.8,
               );
             },
           ),
@@ -364,28 +352,36 @@ class _ClockTickState extends State<_ClockTick> {
     final now = DateTime.now();
     return Text(
       '${two(now.hour)}:${two(now.minute)}:${two(now.second)}',
-      style: AppText.dataStrong.copyWith(color: Dp.ink, fontSize: 11),
+      style: monoTxt(10.5, color: Dp.ink, w: FontWeight.w700),
     );
   }
 }
 
 class _MiniStat extends StatelessWidget {
-  const _MiniStat(this.label, this.value);
+  const _MiniStat(this.label, this.value, this.color);
   final String label;
   final String value;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<CommandCenter>().isDarkMode;
+
     return Container(
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Dp.canvas.withValues(alpha: 0.94),
+        color: isDark
+            ? const Color(0xFF0D1526).withValues(alpha: 0.92)
+            : const Color(0xFFFFFFFF).withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(Dp.rFull),
-        border: Border.all(color: Dp.hairline),
+        border: Border.all(
+          color: isDark ? const Color(0xFF1E2F4C) : const Color(0xFFCBD5E1),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: (isDark ? Colors.black : const Color(0xFF64748B))
+                .withValues(alpha: isDark ? 0.3 : 0.1),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -396,16 +392,16 @@ class _MiniStat extends StatelessWidget {
         children: [
           Text(
             value,
-            style: monoTxt(11, color: Dp.ink, w: FontWeight.w700, ls: 0.2),
+            style: monoTxt(10.5, color: color, w: FontWeight.w700, ls: 0.3),
           ),
           const SizedBox(width: 6),
           Text(
             label,
-            style: AppText.dataTiny.copyWith(
-              color: Dp.textMuted,
-              fontWeight: FontWeight.w600,
-              fontSize: 9,
-              letterSpacing: 0.6,
+            style: monoTxt(
+              8.5,
+              color: isDark ? Dp.textMuted : const Color(0xFF475569),
+              w: FontWeight.w600,
+              ls: 0.5,
             ),
           ),
         ],
@@ -429,64 +425,47 @@ class _LayerToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Dp.isDark;
+    final isDark = context.watch<CommandCenter>().isDarkMode;
+    final bgCol = active
+        ? (isDark ? Dp.accent : const Color(0xFF0F172A))
+        : (isDark ? const Color(0xFF0D1526) : const Color(0xFFFFFFFF));
+    final borderCol = active
+        ? (isDark ? Dp.accent : const Color(0xFF0F172A))
+        : (isDark ? const Color(0xFF1E2F4C) : const Color(0xFFCBD5E1));
+    final fgCol = active
+        ? (isDark ? const Color(0xFF090E17) : const Color(0xFFFFFFFF))
+        : (isDark ? Dp.ink : const Color(0xFF0F172A));
 
-    // High-contrast background and border in both light and dark mode
-    final Color bgCol;
-    final Color borderCol;
-    final Color fgCol;
-    final List<BoxShadow> shadows;
-
-    if (active) {
-      bgCol = Dp.accent; // Electric blue #0066FF
-      borderCol = isDark ? const Color(0xFF3385FF) : const Color(0xFF0052CC);
-      fgCol = Colors.white;
-      shadows = [
-        BoxShadow(
-          color: const Color(0xFF0066FF).withValues(alpha: isDark ? 0.45 : 0.35),
-          blurRadius: 10,
-          offset: const Offset(0, 3),
-        ),
-      ];
-    } else {
-      bgCol = isDark ? const Color(0xFF1E242C) : Colors.white;
-      borderCol = isDark ? const Color(0xFF38444D) : const Color(0xFFC0C6CF);
-      fgCol = isDark ? const Color(0xFFF0F6FC) : const Color(0xFF141414);
-      shadows = [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: isDark ? 0.55 : 0.16),
-          blurRadius: 10,
-          offset: const Offset(0, 3),
-        ),
-      ];
-    }
-
-    return GestureDetector(
+    return Tactile(
       onTap: onTap,
       child: AnimatedContainer(
         duration: Mo.fast,
-        curve: Mo.easeOutTech,
-        width: 48,
-        height: 48,
+        curve: Mo.easeTech,
+        width: 50,
+        height: 50,
         decoration: BoxDecoration(
           color: bgCol,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: borderCol, width: 1.5),
-          boxShadow: shadows,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderCol, width: 1.4),
+          boxShadow: [
+            BoxShadow(
+              color: (active
+                      ? (isDark ? Dp.accent : const Color(0xFF0F172A))
+                      : (isDark ? Colors.black : const Color(0xFF64748B)))
+                  .withValues(alpha: active ? (isDark ? 0.35 : 0.22) : (isDark ? 0.4 : 0.15)),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Drishti.icon(glyph, size: 18, color: fgCol),
+            Drishti.icon(glyph, size: 17, color: fgCol),
             const SizedBox(height: 3),
             Text(
               label,
-              style: AppText.dataTiny.copyWith(
-                color: fgCol,
-                fontSize: 7.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.6,
-              ),
+              style: monoTxt(7.5, color: fgCol, w: FontWeight.w800, ls: 0.6),
             ),
           ],
         ),
@@ -500,31 +479,29 @@ class _MapAttribution extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Dp.isDark;
+
     return IgnorePointer(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: Dp.canvas.withValues(alpha: 0.8),
+          color: (isDark ? const Color(0xFF0D1526) : const Color(0xFFFFFFFF))
+              .withValues(alpha: 0.85),
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: Dp.hairline),
+          border: Border.all(
+            color: isDark ? Dp.hairline : const Color(0xFFCBD5E1),
+          ),
         ),
         child: Text(
-          '© OpenStreetMap · © CARTO · Google API',
-          style: TextStyle(
-            fontFamily: AppText.mono,
-            fontSize: 8,
-            letterSpacing: 0.4,
-            color: Dp.textMuted,
-          ),
+          '© OpenStreetMap contributors',
+          style: monoTxt(8, color: Dp.textFaint),
         ),
       ),
     );
   }
 }
 
-/// ---------------------------------------------------------------------------
-/// The live OPS feed sheet — Mobbin gallery-white sheet with 24px corner geometry.
-/// ---------------------------------------------------------------------------
+/// The live operations feed bottom sheet with staggered slide-in rows.
 class _FeedSheet extends StatelessWidget {
   const _FeedSheet({
     required this.cc,
@@ -540,18 +517,24 @@ class _FeedSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Dp.isDark;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Dp.canvas,
+        color: isDark ? const Color(0xFF0A101E) : const Color(0xFFFFFFFF),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(Dp.rMd)),
         border: Border(
-          top: BorderSide(color: Dp.hairline, width: 1.0),
+          top: BorderSide(
+            color: isDark ? const Color(0xFF1E2F4C) : const Color(0xFFCBD5E1),
+            width: 1.2,
+          ),
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0x14000000),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
+            color: (isDark ? Colors.black : const Color(0xFF64748B))
+                .withValues(alpha: isDark ? 0.5 : 0.2),
+            blurRadius: 28,
+            offset: const Offset(0, -6),
           ),
         ],
       ),
@@ -563,17 +546,20 @@ class _FeedSheet extends StatelessWidget {
           children: [
             _SheetHandle(controller: controller),
             _SheetHeader(cc: cc, controller: controller),
-            HairDivider(color: Dp.hairline, thickness: double.infinity),
+            HairDivider(
+              color: isDark ? const Color(0xFF1E2F4C) : const Color(0xFFE2E8F0),
+              thickness: double.infinity,
+            ),
             const SizedBox(height: 4),
             for (var i = 0; i < cc.incidents.length; i++)
-              _Delayed(
+              _StaggeredSlideIn(
                 order: i,
                 child: _FeedRow(
                   event: cc.incidents[i],
                   onTap: () => onSelect(cc.incidents[i]),
                 ),
               ),
-            const SizedBox(height: 96),
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -581,59 +567,24 @@ class _FeedSheet extends StatelessWidget {
   }
 }
 
-class _SheetHandle extends StatefulWidget {
+class _SheetHandle extends StatelessWidget {
   const _SheetHandle({required this.controller});
   final DraggableScrollableController controller;
 
   @override
-  State<_SheetHandle> createState() => _SheetHandleState();
-}
-
-class _SheetHandleState extends State<_SheetHandle> {
-  bool _hovered = false;
-
-  @override
   Widget build(BuildContext context) {
     final isDark = Dp.isDark;
-    return MouseRegion(
-      cursor: SystemMouseCursors.resizeUpDown,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onVerticalDragUpdate: (details) {
-          if (!widget.controller.isAttached) return;
-          final screenH = MediaQuery.sizeOf(context).height;
-          if (screenH <= 0) return;
-          final delta = -details.primaryDelta! / screenH;
-          final current = widget.controller.size;
-          final next = (current + delta).clamp(0.10, 0.85);
-          widget.controller.jumpTo(next);
-        },
-        child: Container(
-          height: 28,
-          alignment: Alignment.center,
-          color: Colors.transparent,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            width: _hovered ? 68 : 48,
-            height: 5,
-            decoration: BoxDecoration(
-              color: _hovered
-                  ? Dp.accent
-                  : (isDark ? const Color(0xFF48515D) : const Color(0xFFD0D5DD)),
-              borderRadius: BorderRadius.circular(Dp.rFull),
-              boxShadow: _hovered
-                  ? [
-                      BoxShadow(
-                        color: Dp.accent.withValues(alpha: 0.5),
-                        blurRadius: 8,
-                        offset: const Offset(0, 1),
-                      ),
-                    ]
-                  : null,
-            ),
-          ),
+
+    return Container(
+      height: 24,
+      alignment: Alignment.center,
+      color: Colors.transparent,
+      child: Container(
+        width: 44,
+        height: 4.5,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2C3E5E) : const Color(0xFF94A3B8),
+          borderRadius: BorderRadius.circular(Dp.rFull),
         ),
       ),
     );
@@ -650,8 +601,8 @@ class _SheetHeader extends StatelessWidget {
     HapticFeedback.selectionClick();
     controller.animateTo(
       target,
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOutCubic,
+      duration: Mo.standard,
+      curve: Mo.easeTech,
     );
   }
 
@@ -659,77 +610,54 @@ class _SheetHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final latest = cc.latest;
     final isDark = Dp.isDark;
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onVerticalDragUpdate: (details) {
-        if (!controller.isAttached) return;
-        final screenH = MediaQuery.sizeOf(context).height;
-        if (screenH <= 0) return;
-        final delta = -details.primaryDelta! / screenH;
-        final current = controller.size;
-        final next = (current + delta).clamp(0.10, 0.85);
-        controller.jumpTo(next);
-      },
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 2, 18, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Drishti.icon(DGlyph.feed, size: 15, color: Dp.ink),
-                const SizedBox(width: 8),
-                Text(
-                  'OPS FEED',
-                  style: TextStyle(
-                    fontFamily: AppText.mono,
-                    fontSize: 11,
-                    letterSpacing: 1.2,
-                    color: Dp.ink,
-                    fontWeight: FontWeight.w700,
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Drishti.icon(DGlyph.feed, size: 15, color: Dp.accent),
+              const SizedBox(width: 8),
+              Text(
+                'LIVE INCIDENT FEED',
+                style: monoTxt(11, color: Dp.ink, w: FontWeight.w700, ls: 1.0),
+              ),
+              const SizedBox(width: 10),
+              _ResizePill(label: 'MIN', onTap: () => _snap(0.20)),
+              const SizedBox(width: 4),
+              _ResizePill(label: 'MID', onTap: () => _snap(0.48)),
+              const SizedBox(width: 4),
+              _ResizePill(label: 'MAX', onTap: () => _snap(0.82)),
+              const Spacer(),
+              const LivePill(dense: true, label: 'INGESTING'),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF162238) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(Dp.rFull),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF1E2F4C) : const Color(0xFFCBD5E1),
                   ),
                 ),
-                const SizedBox(width: 10),
-                // Quick resize snap buttons
-                _ResizePill(
-                  label: 'MIN',
-                  onTap: () => _snap(0.18),
-                ),
-                const SizedBox(width: 4),
-                _ResizePill(
-                  label: 'MID',
-                  onTap: () => _snap(0.45),
-                ),
-                const SizedBox(width: 4),
-                _ResizePill(
-                  label: 'MAX',
-                  onTap: () => _snap(0.80),
-                ),
-                const Spacer(),
-                const LivePill(dense: true, label: 'STREAMING'),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF21262D) : Dp.canvasSoft,
-                    borderRadius: BorderRadius.circular(Dp.rFull),
-                    border: Border.all(
-                      color: isDark ? const Color(0xFF38444D) : Dp.hairline,
-                    ),
-                  ),
-                  child: Text(
-                    '${cc.total}',
-                    style: AppText.dataStrong.copyWith(color: Dp.ink, fontSize: 11),
+                child: Text(
+                  '${cc.total}',
+                  style: monoTxt(
+                    10.5,
+                    color: isDark ? Dp.accent : const Color(0xFF0F172A),
+                    w: FontWeight.w700,
                   ),
                 ),
-              ],
-            ),
-            if (latest != null) ...[
-              const SizedBox(height: 10),
-              _LatestStrip(event: latest),
+              ),
             ],
+          ),
+          if (latest != null) ...[
+            const SizedBox(height: 8),
+            _LatestFeedAlertBar(event: latest),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -743,28 +671,25 @@ class _ResizePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Dp.isDark;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(Dp.rFull),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF21262D) : Dp.field,
-            borderRadius: BorderRadius.circular(Dp.rFull),
-            border: Border.all(
-              color: isDark ? const Color(0xFF38444D) : Dp.hairlineSoft,
-            ),
+
+    return Tactile(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF141F33) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(Dp.rFull),
+          border: Border.all(
+            color: isDark ? const Color(0xFF223554) : const Color(0xFFCBD5E1),
           ),
-          child: Text(
-            label,
-            style: monoTxt(
-              8.5,
-              color: isDark ? const Color(0xFFC9D1D9) : Dp.inkSoft,
-              w: FontWeight.w700,
-              ls: 0.5,
-            ),
+        ),
+        child: Text(
+          label,
+          style: monoTxt(
+            8,
+            color: isDark ? Dp.textMuted : const Color(0xFF475569),
+            w: FontWeight.w700,
+            ls: 0.5,
           ),
         ),
       ),
@@ -772,85 +697,61 @@ class _ResizePill extends StatelessWidget {
   }
 }
 
-class _LatestStrip extends StatelessWidget {
-  const _LatestStrip({required this.event});
+class _LatestFeedAlertBar extends StatelessWidget {
+  const _LatestFeedAlertBar({required this.event});
   final DetectionEvent event;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Dp.isDark;
     final col = Dp.severityColor(event.severity);
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Dp.canvasSoft,
+        color: isDark ? const Color(0xFF0F1A2E) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(Dp.rSm),
-        border: Border.all(color: Dp.hairline),
+        border: Border.all(color: col.withValues(alpha: isDark ? 0.4 : 0.35)),
       ),
       child: Row(
         children: [
-          SeverityTag(event.severity, size: 9.5),
-          const SizedBox(width: 12),
+          SeverityTag(event.severity, size: 9),
+          const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        event.kind.label.toUpperCase(),
-                        style: AppText.dataStrong.copyWith(
-                          color: Dp.ink,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: col.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(Dp.rFull),
-                      ),
-                      child: Text(
-                        event.confLabel,
-                        style: monoTxt(9.5, color: col, w: FontWeight.w700, ls: 0.3),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${event.busId} · ${event.timeLabel} · ${event.gpsLabel}',
-                  style: AppText.dataTiny.copyWith(color: Dp.textMuted),
-                ),
-              ],
+            child: Text(
+              'NEW INGEST: ${event.kind.label.toUpperCase()} · ${event.confLabel}',
+              style: monoTxt(10.5, color: Dp.ink, w: FontWeight.w700),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 6),
-          Drishti.icon(DGlyph.chevronRight, size: 14, color: Dp.textFaint),
+          Text(
+            event.timeLabel,
+            style: monoTxt(9.5, color: Dp.textMuted),
+          ),
         ],
       ),
     );
   }
 }
 
-class _Delayed extends StatelessWidget {
-  const _Delayed({required this.order, required this.child});
+/// Staggered slide-in animation for arriving incident feed rows.
+class _StaggeredSlideIn extends StatelessWidget {
+  const _StaggeredSlideIn({required this.order, required this.child});
   final int order;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: Mo.standard + Duration(milliseconds: (order % 6) * 30),
-      curve: Mo.easeOutTech,
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Mo.standard + Duration(milliseconds: (order % 6) * 35),
+      curve: Mo.easeTech,
       builder: (context, t, child) => Opacity(
-        opacity: t.clamp(0, 1),
-        child: child,
+        opacity: t.clamp(0.0, 1.0),
+        child: Transform.translate(
+          offset: Offset(0, 14.0 * (1.0 - t)),
+          child: child,
+        ),
       ),
       child: child,
     );
@@ -864,17 +765,20 @@ class _FeedRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Dp.isDark;
     final col = Dp.severityColor(event.severity);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+
+    return Tactile(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 3.5),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Dp.canvas,
+          color: isDark ? const Color(0xFF0D1526) : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(Dp.rSm),
-          border: Border.all(color: Dp.hairlineSoft),
+          border: Border.all(
+            color: isDark ? const Color(0xFF1B283F) : const Color(0xFFE2E8F0),
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -883,16 +787,12 @@ class _FeedRow extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: Dp.canvasSoft,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Dp.hairline),
+                color: col.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: col.withValues(alpha: 0.4)),
               ),
               alignment: Alignment.center,
-              child: Drishti.icon(
-                _glyphFor(event.kind),
-                size: 17,
-                color: col,
-              ),
+              child: Drishti.icon(_glyphFor(event.kind), size: 16, color: col),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -901,23 +801,21 @@ class _FeedRow extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        event.kind.label.toUpperCase(),
-                        style: AppText.dataStrong.copyWith(
-                          fontSize: 12,
-                          color: Dp.ink,
-                          fontWeight: FontWeight.w700,
+                      Flexible(
+                        child: Text(
+                          event.kind.label.toUpperCase(),
+                          style: monoTxt(11.5, color: Dp.ink, w: FontWeight.w700),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      SeverityTag(event.severity, size: 8.5),
+                      SeverityTag(event.severity, size: 8),
                     ],
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    '${event.busId} · ${event.timeLabel} · ${event.confLabel}'
-                    '${event.plate != null ? ' · ${event.plate}' : ''}',
-                    style: AppText.dataTiny.copyWith(color: Dp.textMuted),
+                    '${event.busId} · ${event.timeLabel} · ${event.confLabel}',
+                    style: monoTxt(9, color: Dp.textMuted),
                   ),
                 ],
               ),
@@ -926,20 +824,22 @@ class _FeedRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: event.ageMinutes < 2
-                    ? Dp.accent.withValues(alpha: 0.1)
-                    : Dp.canvasSoft,
+                    ? Dp.accent.withValues(alpha: isDark ? 0.14 : 0.10)
+                    : (isDark ? const Color(0xFF141F33) : const Color(0xFFE2E8F0)),
                 borderRadius: BorderRadius.circular(Dp.rFull),
                 border: Border.all(
                   color: event.ageMinutes < 2
-                      ? Dp.accent.withValues(alpha: 0.3)
-                      : Dp.hairline,
+                      ? (isDark ? Dp.accent.withValues(alpha: 0.5) : const Color(0xFF0284C7))
+                      : (isDark ? const Color(0xFF1E2D47) : const Color(0xFFCBD5E1)),
                 ),
               ),
               child: Text(
                 event.ageMinutes < 2 ? 'NEW' : event.timeShort,
                 style: monoTxt(
                   8.5,
-                  color: event.ageMinutes < 2 ? Dp.accent : Dp.textMuted,
+                  color: event.ageMinutes < 2
+                      ? (isDark ? Dp.accent : const Color(0xFF0284C7))
+                      : (isDark ? Dp.textMuted : const Color(0xFF64748B)),
                   w: FontWeight.w700,
                   ls: 0.4,
                 ),
@@ -958,5 +858,134 @@ class _FeedRow extends StatelessWidget {
         DetectionKind.congestion => DGlyph.stacks,
         DetectionKind.pedRisk => DGlyph.pin,
         DetectionKind.plateCapture => DGlyph.plate,
+      };
+}
+
+/// Incident Inspector modal bottom sheet — pops up when any incident is tapped.
+class _IncidentInspectorSheet extends StatelessWidget {
+  const _IncidentInspectorSheet({required this.event});
+  final DetectionEvent event;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Dp.isDark;
+    final col = Dp.severityColor(event.severity);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF090E17) : const Color(0xFFFFFFFF),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(Dp.rLg)),
+        border: Border(
+          top: BorderSide(
+            color: isDark ? const Color(0xFF1E2F4C) : const Color(0xFFCBD5E1),
+            width: 1.4,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2C3E5E) : const Color(0xFF94A3B8),
+                borderRadius: BorderRadius.circular(Dp.rFull),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: col.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(Dp.rSm),
+                  border: Border.all(color: col.withValues(alpha: 0.6)),
+                ),
+                child: Text(
+                  event.kind.label.toUpperCase(),
+                  style: monoTxt(12, color: col, w: FontWeight.w800, ls: 0.6),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SeverityTag(event.severity, size: 10),
+              const Spacer(),
+              Text(
+                'INCIDENT #${event.id}',
+                style: monoTxt(10, color: Dp.textMuted, w: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(Dp.rMd),
+              border: Border.all(
+                color: isDark ? const Color(0xFF1E2F4C) : const Color(0xFFE2E8F0),
+              ),
+            ),
+            child: Column(
+              children: [
+                _buildInspectRow('DETECTION GPS', event.gpsLabel),
+                _buildInspectRow('REPORTING BUS', event.busId),
+                _buildInspectRow('CONFIDENCE SCORE', event.confLabel, valueColor: Dp.accent),
+                _buildInspectRow('CORRIDOR ID', event.corridorId),
+                _buildInspectRow('TIMESTAMP', event.timeLabel),
+                _buildInspectRow('RECOMMENDED WORK ORDER', _workOrderFor(event.kind)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          TactileButton(
+            label: 'DISPATCH MUNICIPAL PWD REPAIR CREW',
+            icon: DGlyph.check,
+            accent: isDark ? Dp.accent : const Color(0xFF0F172A),
+            expanded: true,
+            onTap: () {
+              HapticFeedback.heavyImpact();
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFF1E293B),
+                  content: Text(
+                    'Work order dispatched for incident #${event.id} (${event.kind.label}). PWD notified.',
+                    style: monoTxt(11, color: isDark ? Dp.accent : Colors.white, w: FontWeight.w600),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInspectRow(String k, String v, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(k, style: monoTxt(9.5, color: Dp.textMuted)),
+          Text(v, style: monoTxt(10.5, color: valueColor ?? Dp.ink, w: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  String _workOrderFor(DetectionKind k) => switch (k) {
+        DetectionKind.pothole => 'Cold-mix asphalt patch within 24h',
+        DetectionKind.roadFracture => 'Bitumen crack-sealing scheduled',
+        DetectionKind.congestion => 'Signal timing optimization signal sent',
+        DetectionKind.pedRisk => 'Pedestrian crossing visibility audit',
+        DetectionKind.signLoss => 'Transit signage replacement order',
+        DetectionKind.plateCapture => 'VLTD lane compliance log verified',
       };
 }

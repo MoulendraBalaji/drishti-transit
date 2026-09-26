@@ -8,6 +8,7 @@ import '../app/palette.dart';
 import '../app/typography.dart';
 import '../core/command_center.dart';
 import '../ui/glyphs.dart';
+import '../ui/gov_masthead.dart';
 
 /// Settings screen for Drishti Transit — configuring theme (System default,
 /// Light, Dark), map layers, edge-AI inference thresholds, and hardware telemetry.
@@ -18,46 +19,59 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cc = context.watch<CommandCenter>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final width = MediaQuery.sizeOf(context).width;
 
     return Scaffold(
       backgroundColor: Dp.canvas,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(context),
+      body: GovCanvas(
+        child: SafeArea(
+          child: Column(
+            children: [
+              const GovTricolorBar(height: 3.5),
+              _buildTopBar(context),
             Expanded(
-              child: ListView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                children: [
-                  _buildBrandTile(context),
-                  const SizedBox(height: 24),
-                  _buildSectionHeader('APPEARANCE & THEME'),
-                  const SizedBox(height: 10),
-                  _buildThemeSelector(context, cc, isDark),
-                  const SizedBox(height: 24),
-                  _buildSectionHeader('MAP & TELEMETRY LAYERS'),
-                  const SizedBox(height: 10),
-                  _buildMapSettingsCard(context, cc),
-                  const SizedBox(height: 24),
-                  _buildSectionHeader('EDGE-AI INFERENCE ENGINE'),
-                  const SizedBox(height: 10),
-                  _buildAiSettingsCard(context, cc),
-                  const SizedBox(height: 24),
-                  _buildSectionHeader('HARDWARE & DIAGNOSTICS'),
-                  const SizedBox(height: 10),
-                  _buildHardwareCard(context, cc),
-                  const SizedBox(height: 32),
-                  _buildResetButton(context, cc),
-                  const SizedBox(height: 48),
-                ],
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 860),
+                  child: ListView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: width > 600 ? 32 : 20,
+                      vertical: 16,
+                    ),
+                    children: [
+                      _buildBrandTile(context),
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('APPEARANCE & THEME'),
+                      const SizedBox(height: 10),
+                      _buildThemeSelector(context, cc, isDark),
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('MAP & TELEMETRY LAYERS'),
+                      const SizedBox(height: 10),
+                      _buildMapSettingsCard(context, cc),
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('EDGE-AI INFERENCE ENGINE'),
+                      const SizedBox(height: 10),
+                      _buildAiSettingsCard(context, cc),
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('GOVERNMENT NODE & HARDWARE TELEMETRY'),
+                      const SizedBox(height: 10),
+                      _buildHardwareCard(context, cc),
+                      const SizedBox(height: 32),
+                      _buildResetButton(context, cc),
+                      const SizedBox(height: 48),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTopBar(BuildContext context) {
     return Container(
@@ -98,12 +112,12 @@ class SettingsScreen extends StatelessWidget {
                 'SYSTEM SETTINGS',
                 style: AppText.label.copyWith(
                   fontWeight: FontWeight.w800,
-                  fontSize: 14,
+                  fontSize: 13,
                   letterSpacing: 0.8,
                 ),
               ),
               Text(
-                'COMMAND NODE CONFIGURATION',
+                'MINISTRY OF ROAD TRANSPORT & HIGHWAYS • NIC GOV-NET',
                 style: AppText.dataTiny.copyWith(
                   color: Dp.textMuted,
                   fontSize: 8.5,
@@ -120,13 +134,27 @@ class SettingsScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(Dp.rFull),
               border: Border.all(color: Dp.hairline),
             ),
-            child: Text(
-              'v1.0.2',
-              style: monoTxt(
-                10,
-                color: Dp.accent,
-                w: FontWeight.w700,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF138808),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'AIS-140 VERIFIED',
+                  style: monoTxt(
+                    9,
+                    color: Dp.accent,
+                    w: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -136,57 +164,105 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _buildBrandTile(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Dp.canvasSoft,
         borderRadius: BorderRadius.circular(Dp.rMd),
         border: Border.all(color: Dp.hairline),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Dp.hairline, width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
+          Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Dp.hairline, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Image.asset(
-              'assets/images/dristhi.jpeg',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Center(
-                child: Drishti.icon(DGlyph.bus, size: 24, color: Dp.accent),
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'DRISHTI TRANSIT NETWORK',
-                  style: AppText.label.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                    letterSpacing: 0.5,
+                child: Image.asset(
+                  'assets/images/dristhi.jpeg',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Center(
+                    child: Drishti.icon(DGlyph.bus, size: 24, color: Dp.accent),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'On-device edge AI telemetry platform turning municipal bus fleets into real-time urban sensing grids.',
-                  style: AppText.bodySmall.copyWith(
-                    color: Dp.textMuted,
-                    fontSize: 11,
-                    height: 1.35,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'भारत सरकार',
+                          style: TextStyle(
+                            fontFamily: AppText.sans,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Dp.ink,
+                          ),
+                        ),
+                        Text(
+                          ' | GOVERNMENT OF INDIA',
+                          style: monoTxt(9.5, color: Dp.textMuted, w: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'DRISHTI-TRANSIT (दृष्टि-ट्रांसिट)',
+                      style: AppText.label.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        letterSpacing: 0.6,
+                        color: Dp.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'National AI Edge Intelligence Grid for Urban Transit & Road Safety',
+                      style: AppText.bodySmall.copyWith(
+                        color: Dp.textMuted,
+                        fontSize: 10.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Dp.canvas,
+              borderRadius: BorderRadius.circular(Dp.rSm),
+              border: Border.all(color: Dp.hairlineSoft),
+            ),
+            child: Row(
+              children: [
+                Drishti.icon(DGlyph.shield, size: 14, color: const Color(0xFF138808)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Certified under MoRTH AIS-140 Section 125-E CMVR 1989 for Intelligent Transport Systems & Municipal Fleet Edge Telemetry.',
+                    style: AppText.bodySmall.copyWith(
+                      color: Dp.textMuted,
+                      fontSize: 10,
+                      height: 1.3,
+                    ),
                   ),
                 ),
               ],
@@ -549,15 +625,21 @@ class SettingsScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _infoRow('EDGE UNIT', 'NVIDIA Jetson Orin Nano (8GB)'),
+          _infoRow('GOVERNMENT AGENCY', 'MoRTH • Smart Cities Mission'),
           const SizedBox(height: 10),
-          _infoRow('NEURAL MODEL', 'YOLOv8-Transit-TRT v4.2 @ FP16'),
+          _infoRow('MUNICIPAL OPERATOR', 'Pune Mahanagar Parivahan (PMPML)'),
           const SizedBox(height: 10),
-          _infoRow('ACTIVE NODES', '42 / 42 Fleet Buses Streaming'),
+          _infoRow('COMPLIANCE SPEC', 'AIS-140 Section 125-E CMVR 1989'),
           const SizedBox(height: 10),
-          _infoRow('RELAY LATENCY', '14 ms (Direct 5G Edge Bridge)'),
+          _infoRow('EDGE COMPUTING UNIT', 'NVIDIA Jetson Orin Nano (8GB) Automotive'),
           const SizedBox(height: 10),
-          _infoRow('CORRIDORS', 'Majestic, Silk Board, Whitefield, Hebbal'),
+          _infoRow('NEURAL TENSORRT MODEL', 'YOLOv8-Transit-TRT v4.2 @ FP16'),
+          const SizedBox(height: 10),
+          _infoRow('ACTIVE FLEET SENSORS', '42 / 42 Municipal Buses Streaming'),
+          const SizedBox(height: 10),
+          _infoRow('GOV-NET RELAY LATENCY', '14 ms (Direct NIC Edge Gateway)'),
+          const SizedBox(height: 10),
+          _infoRow('MONITORED CORRIDORS', 'Katraj, Hadapsar, Swargate, Kothrud, Hinjewadi'),
         ],
       ),
     );

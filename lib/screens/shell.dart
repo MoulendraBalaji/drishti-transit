@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -10,7 +10,18 @@ import '../core/command_center.dart';
 import '../ui/chrome.dart';
 import '../ui/dock.dart';
 import '../ui/glyphs.dart';
+import '../ui/gov_masthead.dart';
+import '../ui/tactile.dart';
 
+/// AppShell — Hosts the 4 core screens:
+/// A) Home / Mission (index 0)
+/// B) Detection Feed (index 1)
+/// C) Command Map (index 2)
+/// D) Analytics (index 3)
+///
+/// Responsive:
+/// - Mobile: DrishtiDock floating bottom bar with animated sliding pill indicator
+/// - Desktop (>= 900px): Left command console rail with animated tab indicator
 class AppShell extends StatefulWidget {
   const AppShell({super.key, required this.shell});
   final StatefulNavigationShell shell;
@@ -22,9 +33,10 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell>
     with SingleTickerProviderStateMixin {
   static const _tabs = [
-    DockTab(DGlyph.target, 'COMMAND'),
-    DockTab(DGlyph.camera, 'EDGE'),
-    DockTab(DGlyph.stats, 'INSIGHT'),
+    DockTab(DGlyph.shield, 'MISSION'),
+    DockTab(DGlyph.camera, 'DETECTION'),
+    DockTab(DGlyph.markRadar, 'COMMAND MAP'),
+    DockTab(DGlyph.stats, 'ANALYTICS'),
   ];
 
   late final AnimationController _entrance = AnimationController(
@@ -39,7 +51,10 @@ class _AppShellState extends State<AppShell>
   }
 
   void _select(int index) {
-    widget.shell.goBranch(index, initialLocation: index == widget.shell.currentIndex);
+    widget.shell.goBranch(
+      index,
+      initialLocation: index == widget.shell.currentIndex,
+    );
   }
 
   @override
@@ -50,381 +65,274 @@ class _AppShellState extends State<AppShell>
 
     return Scaffold(
       backgroundColor: Dp.canvas,
-      body: FadeTransition(
-        opacity: CurvedAnimation(parent: _entrance, curve: Mo.easeInOutTech),
-        child: isDesktop ? _buildAdminDashboard(context, idx) : _buildMobileLayout(idx),
+      body: GovCanvas(
+        child: FadeTransition(
+          opacity: CurvedAnimation(parent: _entrance, curve: Mo.easeTech),
+          child: isDesktop
+              ? _buildDesktopLayout(context, idx)
+              : _buildMobileLayout(idx),
+        ),
       ),
     );
   }
 
   Widget _buildMobileLayout(int idx) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: TabMotion(index: idx, child: widget.shell),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: DrishtiDock(
-            tabs: _tabs,
-            index: idx,
-            onSelect: _select,
-            badge: true,
+    return SafeArea(
+      bottom: false,
+      child: Column(
+        children: [
+          const GovMasthead(dense: true),
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: TabMotion(index: idx, child: widget.shell),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: DrishtiDock(
+                    tabs: _tabs,
+                    index: idx,
+                    onSelect: _select,
+                    badge: true,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildAdminDashboard(BuildContext context, int idx) {
+  Widget _buildDesktopLayout(BuildContext context, int idx) {
     final cc = context.watch<CommandCenter>();
     final isDark = Dp.isDark;
 
-    return Row(
+    return Column(
       children: [
-        // Left Sidebar (Mobbin Admin Dashboard Navigation with high contrast in dark mode)
-        Container(
-          width: 260,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF161B22) : const Color(0xFFFFFFFF),
-            border: Border(
-              right: BorderSide(
-                color: isDark ? const Color(0xFF30363D) : Dp.hairline,
-                width: 1.2,
-              ),
-            ),
-            boxShadow: isDark
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.45),
-                      blurRadius: 16,
-                      offset: const Offset(2, 0),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        context.push('/settings');
-                      },
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        clipBehavior: Clip.antiAlias,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: isDark ? const Color(0xFF38444D) : Dp.hairline,
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.1),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Image.asset(
-                          'assets/images/dristhi.jpeg',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Center(
-                            child: Drishti.icon(DGlyph.bus, size: 20, color: Dp.accent),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'DRISHTI',
-                          style: AppText.displaySmall(size: 16).copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
-                            color: isDark ? const Color(0xFFF0F6FC) : Dp.ink,
-                          ),
-                        ),
-                        Text(
-                          'ADMIN CONSOLE',
-                          style: AppText.dataTiny.copyWith(
-                            color: Dp.accent,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              HairDivider(
-                color: isDark ? const Color(0xFF30363D) : Dp.hairline,
-                thickness: double.infinity,
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'NAVIGATION',
-                  style: AppText.dataTiny.copyWith(
-                    color: isDark ? const Color(0xFF8B949E) : Dp.textMuted,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _SidebarNavButton(
-                icon: DGlyph.target,
-                label: 'Central Command',
-                active: idx == 0,
-                onTap: () => _select(0),
-              ),
-              _SidebarNavButton(
-                icon: DGlyph.camera,
-                label: 'Edge Camera Node',
-                active: idx == 1,
-                onTap: () => _select(1),
-              ),
-              _SidebarNavButton(
-                icon: DGlyph.stats,
-                label: 'Network Insights',
-                active: idx == 2,
-                onTap: () => _select(2),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'PREFERENCES',
-                  style: AppText.dataTiny.copyWith(
-                    color: isDark ? const Color(0xFF8B949E) : Dp.textMuted,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _SidebarNavButton(
-                icon: DGlyph.settings,
-                label: 'System Settings',
-                active: false,
-                onTap: () => context.push('/settings'),
-              ),
-              const Spacer(),
-              // Telemetry status panel in sidebar
-              Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1C2128) : Dp.canvasSoft,
-                  borderRadius: BorderRadius.circular(Dp.rSm),
-                  border: Border.all(
-                    color: isDark ? const Color(0xFF38444D) : Dp.hairline,
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Dp.accent,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'FLEET TELEMETRY',
-                          style: AppText.dataTiny.copyWith(
-                            color: isDark ? const Color(0xFFF0F6FC) : Dp.ink,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      '${cc.busesOnline} Bus Nodes Online',
-                      style: AppText.bodySmall.copyWith(
-                        color: isDark ? Colors.white : Dp.ink,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${cc.total} Detections Logged',
-                      style: AppText.dataTiny.copyWith(
-                        color: isDark ? const Color(0xFF8B949E) : Dp.textMuted,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const LivePill(dense: true, label: 'SYSTEM ACTIVE'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Main Admin Area
+        const GovMasthead(),
         Expanded(
-          child: Column(
+          child: Row(
             children: [
-              // Top Admin Bar
+              // Left Ops Rail
               Container(
-                height: 60,
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                width: 250,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF161B22) : Dp.canvas,
+                  color: isDark ? const Color(0xFF0A101E).withValues(alpha: 0.95) : const Color(0xFFF8FAFC).withValues(alpha: 0.95),
                   border: Border(
-                    bottom: BorderSide(
-                      color: isDark ? const Color(0xFF30363D) : Dp.hairline,
+                    right: BorderSide(
+                      color: isDark ? const Color(0xFF1B283F) : const Color(0xFFE2E8F0),
                       width: 1.2,
                     ),
                   ),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _pageTitle(idx),
-                      style: AppText.displaySmall(size: 16).copyWith(
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.2,
-                        color: isDark ? const Color(0xFFF0F6FC) : Dp.ink,
-                      ),
-                    ),
-                    const SizedBox(width: 24),
-                    // Search bar styled like Google Places
-                    Container(
-                      width: 280,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF0D1117) : Dp.field,
-                        borderRadius: BorderRadius.circular(Dp.rFull),
-                        border: Border.all(
-                          color: isDark ? const Color(0xFF30363D) : Dp.hairlineSoft,
-                        ),
-                      ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
                       child: Row(
                         children: [
-                          Drishti.icon(
-                            DGlyph.target,
-                            size: 14,
-                            color: isDark ? const Color(0xFF8B949E) : Dp.textMuted,
+                          Container(
+                            width: 38,
+                            height: 38,
+                            clipBehavior: Clip.antiAlias,
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF142036) : const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: const Color(0xFFFF9933),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFF9933).withValues(alpha: 0.25),
+                                  blurRadius: 10,
+                                ),
+                              ],
+                            ),
+                            child: Image.asset(
+                              'assets/images/dristhi.jpeg',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Center(
+                                child: AshokaChakra(size: 22, color: Dp.accent),
+                              ),
+                            ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'DRISHTI-TRANSIT',
+                                style: AppText.displaySmall(size: 14).copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.6,
+                                  color: Dp.ink,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    'सत्यमेव जयते',
+                                    style: TextStyle(
+                                      fontFamily: AppText.sans,
+                                      fontSize: 8.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFFFF9933),
+                                    ),
+                                  ),
+                                  Text(
+                                    ' • AIS-140',
+                                    style: monoTxt(8.5, color: Dp.accent, w: FontWeight.w700, ls: 0.8),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const GovTricolorBar(height: 2.5),
+                    const SizedBox(height: 14),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      child: Row(
+                        children: [
                           Text(
-                            'Search Pune corridors, stops…',
+                            'OPERATIONS CONSOLE',
+                            style: monoTxt(9, color: Dp.textFaint, w: FontWeight.w700, ls: 1.2),
+                          ),
+                          const Spacer(),
+                          AshokaChakra(size: 11, color: Dp.textFaint),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    for (var i = 0; i < _tabs.length; i++)
+                      _SidebarNavButton(
+                        icon: _tabs[i].glyph,
+                        label: _tabs[i].label,
+                        active: idx == i,
+                        onTap: () => _select(i),
+                      ),
+                    const Spacer(),
+                    // Telemetry status module in sidebar with tricolor accent
+                    Container(
+                      margin: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0E1628) : const Color(0xFFFFFFFF),
+                        borderRadius: BorderRadius.circular(Dp.rSm),
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF1E2F4C) : const Color(0xFFE2E8F0),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF9933).withValues(alpha: isDark ? 0.08 : 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              AshokaChakra(size: 13, color: const Color(0xFF000080)),
+                              const SizedBox(width: 8),
+                              Text(
+                                'FLEET TELEMETRY',
+                                style: monoTxt(9.5, color: Dp.ink, w: FontWeight.w700, ls: 0.8),
+                              ),
+                              const Spacer(),
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF138808),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '${cc.busesOnline} Active Bus Scanners',
                             style: AppText.bodySmall.copyWith(
-                              color: isDark ? const Color(0xFF8B949E) : Dp.textMuted,
+                              color: Dp.ink,
+                              fontWeight: FontWeight.w600,
                               fontSize: 12,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF21262D) : Dp.canvasSoft,
-                        borderRadius: BorderRadius.circular(Dp.rFull),
-                        border: Border.all(
-                          color: isDark ? const Color(0xFF38444D) : Dp.hairline,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: const BoxDecoration(
-                              color: Dp.accent,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
+                          const SizedBox(height: 2),
                           Text(
-                            'MAPS API LINKED',
-                            style: monoTxt(
-                              9,
-                              color: isDark ? const Color(0xFFF0F6FC) : Dp.ink,
-                              w: FontWeight.w700,
-                              ls: 0.5,
-                            ),
+                            '${cc.total} Live Defect Vectors',
+                            style: monoTxt(9, color: Dp.textMuted),
                           ),
+                          const SizedBox(height: 10),
+                          const LivePill(dense: true, label: 'NIC GOV-NET ACTIVE'),
                         ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    const LivePill(label: 'ADMIN LIVE'),
-                    const SizedBox(width: 12),
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        context.push('/settings');
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF21262D) : Dp.canvasSoft,
-                          borderRadius: BorderRadius.circular(Dp.rFull),
-                          border: Border.all(
-                            color: isDark ? const Color(0xFF38444D) : Dp.hairline,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Drishti.icon(
-                              DGlyph.settings,
-                              size: 13,
-                              color: isDark ? const Color(0xFFF0F6FC) : Dp.ink,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'SETTINGS',
-                              style: monoTxt(
-                                9,
-                                color: isDark ? const Color(0xFFF0F6FC) : Dp.ink,
-                                w: FontWeight.w700,
-                                ls: 0.8,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ),
                   ],
                 ),
               ),
+              // Content Area
               Expanded(
-                child: TabMotion(index: idx, child: widget.shell),
+                child: Column(
+                  children: [
+                    // Top Ops Bar
+                    Container(
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF090E17) : const Color(0xFFFFFFFF),
+                        border: Border(
+                          bottom: BorderSide(
+                            color: isDark ? const Color(0xFF1B283F) : const Color(0xFFE2E8F0),
+                            width: 1.0,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          AshokaChakra(size: 16, color: const Color(0xFF000080)),
+                          const SizedBox(width: 8),
+                          Text(
+                            _tabs[idx].label,
+                            style: monoTxt(12, color: Dp.accent, w: FontWeight.w800, ls: 1.2),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 4,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF485A75) : const Color(0xFF94A3B8),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'पुणे महानगर परिवहन • PUNE METROPOLITAN GRID',
+                            style: monoTxt(10, color: Dp.textMuted),
+                          ),
+                          const Spacer(),
+                          const GovBadge(label: 'NIC GOV-NET', sublabel: 'LIVE STREAM', dense: true),
+                          const SizedBox(width: 14),
+                          const _DesktopClock(),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: TabMotion(index: idx, child: widget.shell),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -432,22 +340,9 @@ class _AppShellState extends State<AppShell>
       ],
     );
   }
-
-  String _pageTitle(int idx) {
-    switch (idx) {
-      case 0:
-        return 'Central Fleet Command & Geospatial Stream';
-      case 1:
-        return 'Edge-AI High Accuracy Camera Inference';
-      case 2:
-        return 'Network Insights & Defect Analytics';
-      default:
-        return 'Drishti Transit';
-    }
-  }
 }
 
-class _SidebarNavButton extends StatefulWidget {
+class _SidebarNavButton extends StatelessWidget {
   const _SidebarNavButton({
     required this.icon,
     required this.label,
@@ -461,111 +356,111 @@ class _SidebarNavButton extends StatefulWidget {
   final VoidCallback onTap;
 
   @override
-  State<_SidebarNavButton> createState() => _SidebarNavButtonState();
+  Widget build(BuildContext context) {
+    final isDark = Dp.isDark;
+
+    return Tactile(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: Mo.fast,
+        curve: Mo.easeTech,
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: active
+              ? (isDark ? const Color(0xFF16233B) : const Color(0xFFE2E8F0))
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(Dp.rSm),
+          border: Border.all(
+            color: active
+                ? (isDark ? Dp.accent.withValues(alpha: 0.5) : const Color(0xFF0F172A))
+                : Colors.transparent,
+            width: 1.0,
+          ),
+          boxShadow: active && isDark
+              ? [
+                  BoxShadow(
+                    color: Dp.accent.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Drishti.icon(
+              icon,
+              size: 16,
+              color: active
+                  ? (isDark ? Dp.accent : const Color(0xFF0F172A))
+                  : (isDark ? const Color(0xFF8899AC) : const Color(0xFF64748B)),
+              stroke: active ? 2.0 : 1.6,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: monoTxt(
+                11,
+                color: active
+                    ? Dp.ink
+                    : (isDark ? const Color(0xFF8899AC) : const Color(0xFF64748B)),
+                w: active ? FontWeight.w700 : FontWeight.w500,
+                ls: 0.6,
+              ),
+            ),
+            const Spacer(),
+            if (active)
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 0.6),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFFF9933), Color(0xFF138808)],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _SidebarNavButtonState extends State<_SidebarNavButton> {
-  bool _hovered = false;
+class _DesktopClock extends StatefulWidget {
+  const _DesktopClock();
+
+  @override
+  State<_DesktopClock> createState() => _DesktopClockState();
+}
+
+class _DesktopClockState extends State<_DesktopClock> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Dp.isDark;
-    final bool active = widget.active;
-
-    final Color bg;
-    final Color fg;
-    final Color border;
-    final List<BoxShadow>? shadows;
-
-    if (active) {
-      bg = Dp.accent; // Electric blue #0066FF
-      fg = Colors.white;
-      border = isDark ? const Color(0xFF3385FF) : const Color(0xFF0052CC);
-      shadows = [
-        BoxShadow(
-          color: const Color(0xFF0066FF).withValues(alpha: isDark ? 0.40 : 0.25),
-          blurRadius: 10,
-          offset: const Offset(0, 3),
-        ),
-      ];
-    } else {
-      if (_hovered) {
-        bg = isDark ? const Color(0xFF262C36) : const Color(0xFFF2F4F7);
-        fg = isDark ? Colors.white : Dp.ink;
-        border = isDark ? const Color(0xFF38444D) : Dp.hairline;
-        shadows = null;
-      } else {
-        bg = isDark ? const Color(0xFF1C2128) : Colors.transparent;
-        fg = isDark ? const Color(0xFFE6EDF3) : Dp.ink;
-        border = isDark ? const Color(0xFF2D333B) : Colors.transparent;
-        shadows = null;
-      }
-    }
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3.5),
-      child: Material(
-        color: Colors.transparent,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          onEnter: (_) => setState(() => _hovered = true),
-          onExit: (_) => setState(() => _hovered = false),
-          child: InkWell(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              widget.onTap();
-            },
-            borderRadius: BorderRadius.circular(Dp.rFull),
-            child: AnimatedContainer(
-              duration: Mo.fast,
-              curve: Mo.easeOutTech,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: bg,
-                borderRadius: BorderRadius.circular(Dp.rFull),
-                border: Border.all(color: border, width: 1.2),
-                boxShadow: shadows,
-              ),
-              child: Row(
-                children: [
-                  Drishti.icon(
-                    widget.icon,
-                    size: 16,
-                    color: fg,
-                    stroke: active ? 2.2 : 1.8,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    widget.label,
-                    style: AppText.label.copyWith(
-                      color: fg,
-                      fontWeight: active ? FontWeight.w700 : FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                  if (active) ...[
-                    const Spacer(),
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    String two(int v) => v.toString().padLeft(2, '0');
+    final now = DateTime.now();
+    return Text(
+      '${two(now.hour)}:${two(now.minute)}:${two(now.second)} IST',
+      style: monoTxt(10.5, color: Dp.ink, w: FontWeight.w700),
     );
   }
 }

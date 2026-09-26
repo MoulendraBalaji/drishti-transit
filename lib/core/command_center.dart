@@ -17,9 +17,11 @@ import 'sim.dart';
 ///
 /// Everything a screen displays is derived from [DetectionEvent]s that flow
 /// through here, so the judge can trace one detection end to end.
-class CommandCenter extends ChangeNotifier {
+class CommandCenter extends ChangeNotifier with WidgetsBindingObserver {
   CommandCenter({bool simulate = true}) {
-    Dp.isDark = isDarkMode;
+    WidgetsBinding.instance.addObserver(this);
+    final systemBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    Dp.isDark = systemBrightness == Brightness.dark;
     _fleet = FleetService();
     _svc = DetectionService(_fleet);
     _seed();
@@ -29,23 +31,35 @@ class CommandCenter extends ChangeNotifier {
     }
   }
 
+  @override
+  void didChangePlatformBrightness() {
+    if (_themeMode == ThemeMode.system) {
+      Dp.isDark = isDarkMode;
+      notifyListeners();
+    }
+  }
+
   ThemeMode _themeMode = ThemeMode.system;
   ThemeMode get themeMode => _themeMode;
-  bool get isDarkMode => Dp.isDark;
+  bool get isDarkMode => switch (_themeMode) {
+    ThemeMode.dark => true,
+    ThemeMode.light => false,
+    ThemeMode.system => WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark,
+  };
 
   void setThemeMode(ThemeMode mode) {
-    if (_themeMode == mode) return;
     _themeMode = mode;
-    if (mode == ThemeMode.dark) Dp.isDark = true;
-    if (mode == ThemeMode.light) Dp.isDark = false;
+    Dp.isDark = isDarkMode;
     notifyListeners();
   }
 
   void toggleTheme() {
     if (_themeMode == ThemeMode.system) {
       setThemeMode(Dp.isDark ? ThemeMode.light : ThemeMode.dark);
+    } else if (_themeMode == ThemeMode.dark) {
+      setThemeMode(ThemeMode.light);
     } else {
-      setThemeMode(_themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark);
+      setThemeMode(ThemeMode.system);
     }
   }
 
@@ -273,6 +287,7 @@ class CommandCenter extends ChangeNotifier {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _decay?.cancel();
     _sub?.cancel();
     _fleet.dispose();

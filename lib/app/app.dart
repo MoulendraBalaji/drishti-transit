@@ -32,11 +32,16 @@ class _DrishtiAppState extends State<DrishtiApp> {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: widget.center,
-      child: Selector<CommandCenter, ThemeMode>(
-        selector: (_, cc) => cc.themeMode,
-        builder: (context, themeMode, _) {
+      child: Selector<CommandCenter, (ThemeMode, bool)>(
+        selector: (_, cc) => (cc.themeMode, cc.isDarkMode),
+        builder: (context, themeState, _) {
+          final themeMode = themeState.$1;
+          final isDark = themeState.$2;
+          Dp.isDark = isDark;
+
           return MaterialApp.router(
-            title: 'Drishti',
+            key: ValueKey('material_app_${isDark ? 'dark' : 'light'}'),
+            title: 'Drishti-Transit',
             debugShowCheckedModeBanner: false,
             theme: buildDrishtiTheme(isDark: false),
             darkTheme: buildDrishtiTheme(isDark: true),
@@ -53,8 +58,7 @@ class _DrishtiAppState extends State<DrishtiApp> {
             ),
             routerConfig: _router,
             builder: (context, child) {
-              final isDark = Theme.of(context).brightness == Brightness.dark;
-              Dp.isDark = isDark;
+              Dp.isDark = Theme.of(context).brightness == Brightness.dark;
               return child!;
             },
           );

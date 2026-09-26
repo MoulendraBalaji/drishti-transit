@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../app/motion.dart';
 import '../app/palette.dart';
 import '../app/typography.dart';
 import 'glyphs.dart';
+import 'tactile.dart';
 
-/// Live status pill — the small "system alive" affordance with electric blue accent.
+/// Live status pill — the small "system alive" affordance with continuous subtle pulse.
 class LivePill extends StatefulWidget {
   const LivePill({super.key, this.label = 'LIVE', this.dense = false, this.color});
   final String label;
@@ -20,8 +20,9 @@ class LivePill extends StatefulWidget {
 class _LivePillState extends State<LivePill>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
-      vsync: this, duration: Mo.livePulse)
-    ..repeat();
+    vsync: this,
+    duration: Mo.livePulse,
+  )..repeat();
 
   @override
   void dispose() {
@@ -36,15 +37,15 @@ class _LivePillState extends State<LivePill>
       animation: _c,
       builder: (context, _) {
         final t = _c.value;
-        final pulse = 1.0 + 0.4 * (1 - t) * 0.18;
+        final pulse = 1.0 + 0.3 * (1.0 - (t - 0.5).abs() * 2);
         return Container(
           padding: widget.dense
               ? const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5)
               : const EdgeInsets.symmetric(horizontal: 11, vertical: 4.5),
           decoration: BoxDecoration(
-            color: col.withValues(alpha: 0.09),
+            color: col.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(Dp.rFull),
-            border: Border.all(color: col.withValues(alpha: 0.35)),
+            border: Border.all(color: col.withValues(alpha: 0.45), width: 1.0),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -56,14 +57,14 @@ class _LivePillState extends State<LivePill>
                   painter: _PulseDotPainter(col),
                 ),
               ),
-              SizedBox(width: widget.dense ? 5 : 6),
+              SizedBox(width: widget.dense ? 5 : 7),
               Text(
                 widget.label,
                 style: monoTxt(
-                  widget.dense ? 9 : 10.5,
+                  widget.dense ? 9.5 : 10.5,
                   color: col,
                   w: FontWeight.w700,
-                  ls: 1.2,
+                  ls: 1.1,
                 ),
               ),
             ],
@@ -88,7 +89,7 @@ class _PulseDotPainter extends CustomPainter {
   bool shouldRepaint(_PulseDotPainter old) => old.color != color;
 }
 
-/// A Mobbin-styled card/panel: crisp 1px hairline border (#E0E0E0 in light, #30363D in dark), 24px or 16px geometry.
+/// A command-center card/panel: crisp 1px hairline border, deep navy background.
 class Panel extends StatelessWidget {
   const Panel({
     super.key,
@@ -109,7 +110,7 @@ class Panel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? Dp.canvas;
+    final c = color ?? Dp.card;
     final b = border ?? Dp.hairline;
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -118,11 +119,9 @@ class Panel extends StatelessWidget {
         border: Border.all(color: glow ?? b, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Dp.isDark
-                ? Colors.black.withValues(alpha: 0.35)
-                : Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -131,7 +130,7 @@ class Panel extends StatelessWidget {
   }
 }
 
-/// A hairline horizontal divider.
+/// A hairline divider.
 class HairDivider extends StatelessWidget {
   const HairDivider({super.key, this.color, this.thickness = 45});
   final Color? color;
@@ -147,7 +146,7 @@ class HairDivider extends StatelessWidget {
   }
 }
 
-/// Section label: small uppercase typography with Mobbin style.
+/// Section header with active accent notch.
 class SectionHeader extends StatelessWidget {
   const SectionHeader(this.title, {super.key, this.trailing, this.color});
   final String title;
@@ -162,11 +161,11 @@ class SectionHeader extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 4,
+            width: 3.5,
             height: 12,
             decoration: BoxDecoration(
               color: Dp.accent,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(1.5),
             ),
           ),
           const SizedBox(width: 8),
@@ -175,7 +174,7 @@ class SectionHeader extends StatelessWidget {
             style: AppText.dataTiny.copyWith(
               color: c,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
+              letterSpacing: 0.9,
             ),
           ),
           const Spacer(),
@@ -197,11 +196,13 @@ class SeverityTag extends StatelessWidget {
     final col = Dp.severityColor(severity);
     return Container(
       padding: EdgeInsets.symmetric(
-          horizontal: size * 0.7, vertical: size * 0.35),
+        horizontal: size * 0.75,
+        vertical: size * 0.35,
+      ),
       decoration: BoxDecoration(
-        color: col.withValues(alpha: 0.10),
+        color: col.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(Dp.rFull),
-        border: Border.all(color: col.withValues(alpha: 0.35)),
+        border: Border.all(color: col.withValues(alpha: 0.5), width: 1.0),
       ),
       child: Text(
         severity.code,
@@ -211,10 +212,20 @@ class SeverityTag extends StatelessWidget {
   }
 }
 
-/// A thin key/value data row with Mobbin typography.
-class DataRow extends StatelessWidget {
-  const DataRow(this.key_, this.value,
-      {super.key, this.color, this.valueColor, this.trailing});
+/// Compatibility alias for key-value data rows
+typedef DataRow = DataRowItem;
+
+/// A thin key/value data row for ops logs.
+class DataRowItem extends StatelessWidget {
+  const DataRowItem(
+    this.key_,
+    this.value, {
+    super.key,
+    this.color,
+    this.valueColor,
+    this.trailing,
+  });
+
   final String key_;
   final String value;
   final Color? color;
@@ -229,7 +240,7 @@ class DataRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100,
+            width: 110,
             child: Text(
               key_,
               style: AppText.dataTiny.copyWith(color: Dp.textMuted),
@@ -251,8 +262,8 @@ class DataRow extends StatelessWidget {
   }
 }
 
-/// Mobbin Primary Stadium Button (Solid black #141414, white text, pill geometry)
-class CommandButton extends StatefulWidget {
+/// Command-center primary/secondary button built on Tactile.
+class CommandButton extends StatelessWidget {
   const CommandButton({
     super.key,
     required this.label,
@@ -261,6 +272,7 @@ class CommandButton extends StatefulWidget {
     this.accent,
     this.outline = false,
     this.loading = false,
+    this.dense = false,
   });
 
   final String label;
@@ -269,93 +281,36 @@ class CommandButton extends StatefulWidget {
   final Color? accent;
   final bool outline;
   final bool loading;
-
-  @override
-  State<CommandButton> createState() => _CommandButtonState();
-}
-
-class _CommandButtonState extends State<CommandButton> {
-  bool _down = false;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
-    final bgCol = widget.outline
-        ? Dp.canvas
-        : (widget.accent ?? Dp.primary);
-    final textCol = widget.outline
-        ? Dp.ink
-        : (widget.accent != null ? Colors.white : Dp.onPrimary);
-    final borderCol = widget.outline ? Dp.hairline : Colors.transparent;
-
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _down = true),
-      onTapUp: (_) {
-        setState(() => _down = false);
-        HapticFeedback.mediumImpact();
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _down = false),
-      child: AnimatedScale(
-        scale: _down ? 0.97 : 1,
-        duration: Mo.micro,
-        curve: Mo.easeOutTech,
-        child: AnimatedContainer(
-          duration: Mo.fast,
-          curve: Mo.easeOutTech,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            color: _down ? bgCol.withValues(alpha: 0.85) : bgCol,
-            borderRadius: BorderRadius.circular(Dp.rFull),
-            border: Border.all(color: borderCol, width: 1.0),
-            boxShadow: widget.outline
-                ? []
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (widget.loading)
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(textCol),
-                  ),
-                )
-              else if (widget.icon != null) ...[
-                Drishti.icon(widget.icon!, size: 16, color: textCol),
-                const SizedBox(width: 8),
-              ],
-              Text(
-                widget.label,
-                style: AppText.label.copyWith(
-                  color: textCol,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return TactileButton(
+      label: label,
+      onTap: onTap,
+      icon: icon,
+      accent: accent,
+      outline: outline,
+      dense: dense,
+      primary: !outline,
     );
   }
 }
 
-/// Stat block with Mobbin typography (crisp black display number + muted label).
+/// Stat block with Fraunces number and monospace label.
 class StatBlock extends StatelessWidget {
-  const StatBlock({super.key, required this.number, required this.label, this.color});
+  const StatBlock({
+    super.key,
+    required this.number,
+    required this.label,
+    this.color,
+    this.trend,
+  });
+
   final String number;
   final String label;
   final Color? color;
+  final String? trend;
 
   @override
   Widget build(BuildContext context) {
@@ -365,17 +320,35 @@ class StatBlock extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            number,
-            style: AppText.displayNumber.copyWith(
-              color: col,
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                number,
+                style: AppText.displayNumber.copyWith(
+                  color: col,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
-          ),
+            if (trend != null) ...[
+              const SizedBox(width: 5),
+              Text(
+                trend!,
+                style: AppText.dataTiny.copyWith(
+                  color: Dp.accent,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ],
         ),
         const SizedBox(height: 3),
         Text(

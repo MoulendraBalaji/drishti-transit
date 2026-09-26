@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' hide DataRow;
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -334,14 +334,14 @@ class _FactsPanel extends StatelessWidget {
           const SizedBox(height: 14),
           HairDivider(color: Dp.hairline, thickness: double.infinity),
           const SizedBox(height: 10),
-          DataRow('TIMESTAMP', timeStr),
-          DataRow('COORDINATES', event.gpsLabel),
-          DataRow('DETECTOR BUS', '${event.busId} (${event.busRoute})'),
-          DataRow('CORRIDOR', event.corridorId),
-          if (event.trackId != null) DataRow('TRACK ID', event.trackId!),
-          if (event.speedKmh != null) DataRow('VELOCITY', '${event.speedKmh!.toStringAsFixed(1)} KM/H'),
-          if (event.distanceM != null) DataRow('DISTANCE', '${event.distanceM!.toStringAsFixed(1)} METERS'),
-          DataRow('MODEL CONF', event.confLabel, valueColor: Dp.accent),
+          DataRowItem('TIMESTAMP', timeStr),
+          DataRowItem('COORDINATES', event.gpsLabel),
+          DataRowItem('DETECTOR BUS', '${event.busId} (${event.busRoute})'),
+          DataRowItem('CORRIDOR', event.corridorId),
+          if (event.trackId != null) DataRowItem('TRACK ID', event.trackId!),
+          if (event.speedKmh != null) DataRowItem('VELOCITY', '${event.speedKmh!.toStringAsFixed(1)} KM/H'),
+          if (event.distanceM != null) DataRowItem('DISTANCE', '${event.distanceM!.toStringAsFixed(1)} METERS'),
+          DataRowItem('MODEL CONF', event.confLabel, valueColor: Dp.accent),
         ],
       ),
     );

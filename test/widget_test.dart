@@ -4,22 +4,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('boots through the splash into the command center with floating dock and layer toggles', (tester) async {
-    final center = CommandCenter();
+  testWidgets('boots into mission with government masthead, dock tabs, and command map layer toggles', (tester) async {
+    final center = CommandCenter(simulate: false);
     await tester.pumpWidget(DrishtiApp(center: center));
+    await tester.pump(const Duration(milliseconds: 600));
 
-    // Splash boots and the router advances to the command center.
-    await tester.pump(const Duration(milliseconds: 3200));
-    await tester.pump(const Duration(milliseconds: 500));
+    // Verify Government Masthead & 4-tab dock
+    expect(find.text('DRISHTI-TRANSIT'), findsWidgets);
+    expect(find.text('MISSION'), findsWidgets);
+    expect(find.text('DETECTION'), findsWidgets);
+    expect(find.text('COMMAND MAP'), findsWidgets);
+    expect(find.text('ANALYTICS'), findsWidgets);
 
-    // Dock is up, feed sheet visible.
-    expect(find.text('EDGE'), findsOneWidget);
-    expect(find.text('OPS FEED'), findsOneWidget);
+    // Switch to Command Map (Tab index 2)
+    final mapTab = find.byKey(const ValueKey('dock_tab_COMMAND MAP'));
+    expect(mapTab, findsOneWidget);
+    await tester.tap(mapTab);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
 
-    // High-contrast HEAT, ROUTE, and CENTER controls are present and visible.
+    // High-contrast HEAT and CORRIDOR controls are present and visible on Command Map.
     expect(find.text('HEAT'), findsOneWidget);
-    expect(find.text('ROUTE'), findsOneWidget);
-    expect(find.text('CENTER'), findsOneWidget);
+    expect(find.text('CORRIDOR'), findsOneWidget);
 
     // Tapping HEAT toggles heatmap layer in CommandCenter.
     expect(center.showHeatmap, isTrue);
@@ -27,9 +33,9 @@ void main() {
     await tester.pump();
     expect(center.showHeatmap, isFalse);
 
-    // Tapping ROUTE toggles transit corridors in CommandCenter.
+    // Tapping CORRIDOR toggles transit corridors in CommandCenter.
     expect(center.showCorridors, isTrue);
-    await tester.tap(find.text('ROUTE'));
+    await tester.tap(find.text('CORRIDOR'));
     await tester.pump();
     expect(center.showCorridors, isFalse);
 
@@ -39,14 +45,12 @@ void main() {
   });
 
   testWidgets('navigates to settings and configures system default theme', (tester) async {
-    final center = CommandCenter();
+    final center = CommandCenter(simulate: false);
     await tester.pumpWidget(DrishtiApp(center: center));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
 
-    // Fast-forward through splash
-    await tester.pump(const Duration(milliseconds: 3200));
-    await tester.pump(const Duration(milliseconds: 500));
-
-    // Tap the top left Drishti brand / app icon to open settings
+    // Tap the settings button in GovMasthead
     final settingsBtn = find.byKey(const ValueKey('command_settings_button'));
     expect(settingsBtn, findsOneWidget);
     await tester.tap(settingsBtn);
@@ -94,7 +98,58 @@ void main() {
 
     center.setThemeMode(ThemeMode.system);
     expect(center.themeMode, ThemeMode.system);
-
     center.dispose();
+  });
+
+  testWidgets('command map page and its toggles switch to light mode styling when light mode is selected', (tester) async {
+    final center = CommandCenter(simulate: false);
+    center.setThemeMode(ThemeMode.light);
+    await tester.pumpWidget(DrishtiApp(center: center));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // Switch to Command Map
+    final mapTab = find.byKey(const ValueKey('dock_tab_COMMAND MAP'));
+    await tester.tap(mapTab);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // Verify OpenStreetMap basemap tile layer is loaded in Light Mode
+    expect(find.byKey(const ValueKey('osm_light')), findsOneWidget);
+    expect(find.text('HEAT'), findsOneWidget);
+    expect(find.text('CORRIDOR'), findsOneWidget);
+
+    // Switch to Dark Mode dynamically
+    center.setThemeMode(ThemeMode.dark);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // Verify OpenStreetMap basemap tile layer is loaded in Dark Mode
+    expect(find.byKey(const ValueKey('osm_dark')), findsOneWidget);
+
+    // Clean unmount
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 100));
+  });
+
+  testWidgets('switches to detection feed with live video stream overlay and controls', (tester) async {
+    final center = CommandCenter(simulate: false);
+    await tester.pumpWidget(DrishtiApp(center: center));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // Switch to Detection Feed tab
+    final detectionTab = find.byKey(const ValueKey('dock_tab_DETECTION'));
+    await tester.tap(detectionTab);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // Verify detection feed elements
+    expect(find.text('LIVE ON-BUS INFERENCE LOG · SUB-METER GEO SYNC'), findsOneWidget);
+    expect(find.text('RE-SCAN'), findsOneWidget);
+
+    // Clean unmount
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 100));
   });
 }

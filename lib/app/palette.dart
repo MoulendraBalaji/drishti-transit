@@ -1,96 +1,128 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
-/// Drishti Palette — Crafted exactly according to Mobbin's design system:
-/// A gallery-white, monochrome interface system built to disappear behind the
-/// content it curates. Near-black ink (#141414) on pure white canvas (#FFFFFF),
-/// a subtle ladder of barely-there neutral tints (#F3F3F3, #F0F0F0) and crisp
-/// hairline borders (#E0E0E0), stadium-pill controls (9999px), 24px card geometry,
-/// 30% squircle icons, and an electric blue accent (#0066FF) reserved for active
-/// signals and live telemetry.
+/// Drishti-Transit Palette — Command-Center Ops-Room Aesthetic:
+/// Deep navy/ink base (never pure black: #090E17 / #0F172A), crisp slate borders
+/// (#1E293B / #26354D), confident electric cyan live accent (#00F5D4),
+/// and a deliberate non-cartoonish severity scale (amber -> orange -> crimson red)
+/// for alerts. Dark mode as primary.
 class Dp {
   Dp._();
 
-  /// Whether the active theme is Dark Mode.
-  static bool isDark = false;
+  /// Dark mode is primary.
+  static bool isDark = true;
 
-  // Mobbin Canvas & Neutral ladder (Light)
-  static const Color _canvasLight = Color(0xFFFFFFFF);
-  static const Color _canvasSoftLight = Color(0xFFF7F8FA);
-  static const Color _fieldLight = Color(0xFFF0F2F5);
-  static const Color _hairlineLight = Color(0xFFE2E4E8);
-  static const Color _hairlineSoftLight = Color(0xFFECEFF2);
+  // Command Navy Canvas & Slate Ladder (Dark - Primary)
+  static const Color _canvasDark = Color(0xFF090E17);
+  static const Color _canvasSoftDark = Color(0xFF0F172A);
+  static const Color _fieldDark = Color(0xFF162238);
+  static const Color _cardDark = Color(0xFF111C2E);
+  static const Color _hairlineDark = Color(0xFF1F2F4A);
+  static const Color _hairlineSoftDark = Color(0xFF18253A);
+  static const Color _lineBrightDark = Color(0xFF2C4166);
 
-  // Mobbin Inks (Light)
-  static const Color _primaryLight = Color(0xFF121417);
-  static const Color _onPrimaryLight = Color(0xFFFFFFFF);
-  static const Color _inkLight = Color(0xFF121417);
-  static const Color _inkSoftLight = Color(0xFF26292E);
-  static const Color _textMutedLight = Color(0xFF656D76);
-  static const Color _textFaintLight = Color(0xFF8C959F);
+  // Inks & Typography (Dark)
+  static const Color _inkDark = Color(0xFFF1F5F9);
+  static const Color _inkSoftDark = Color(0xFFCBD5E1);
+  static const Color _textMutedDark = Color(0xFF8899AC);
+  static const Color _textFaintDark = Color(0xFF5B6E84);
 
-  // Mobbin Deep Charcoal Canvas & Neutral ladder (Dark Mode)
-  static const Color _canvasDark = Color(0xFF0D1117);
-  static const Color _canvasSoftDark = Color(0xFF161B22);
-  static const Color _fieldDark = Color(0xFF21262D);
-  static const Color _hairlineDark = Color(0xFF30363D);
-  static const Color _hairlineSoftDark = Color(0xFF21262D);
+  // Light Mode Fallback
+  static const Color _canvasLight = Color(0xFFF4F6F9);
+  static const Color _canvasSoftLight = Color(0xFFFFFFFF);
+  static const Color _fieldLight = Color(0xFFE9EDF2);
+  static const Color _cardLight = Color(0xFFFFFFFF);
+  static const Color _hairlineLight = Color(0xFFD3DBE5);
+  static const Color _hairlineSoftLight = Color(0xFFE2E8F0);
+  static const Color _lineBrightLight = Color(0xFFBAC7D5);
 
-  // Mobbin Crisp Inks (Dark Mode)
-  static const Color _primaryDark = Color(0xFFF0F6FC);
-  static const Color _onPrimaryDark = Color(0xFF0D1117);
-  static const Color _inkDark = Color(0xFFF0F6FC);
-  static const Color _inkSoftDark = Color(0xFFC9D1D9);
-  static const Color _textMutedDark = Color(0xFF8B949E);
-  static const Color _textFaintDark = Color(0xFF7D8590);
+  static const Color _inkLight = Color(0xFF0F172A);
+  static const Color _inkSoftLight = Color(0xFF334155);
+  static const Color _textMutedLight = Color(0xFF64748B);
+  static const Color _textFaintLight = Color(0xFF94A3B8);
 
-  // Dynamic Theme-Aware Getters
+  // Dynamic Theme Getters
   static Color get canvas => isDark ? _canvasDark : _canvasLight;
   static Color get canvasSoft => isDark ? _canvasSoftDark : _canvasSoftLight;
+  static Color get card => isDark ? _cardDark : _cardLight;
   static Color get field => isDark ? _fieldDark : _fieldLight;
   static Color get hairline => isDark ? _hairlineDark : _hairlineLight;
   static Color get hairlineSoft => isDark ? _hairlineSoftDark : _hairlineSoftLight;
+  static Color get lineBright => isDark ? _lineBrightDark : _lineBrightLight;
 
   // Surface aliases
   static Color get bg => canvas;
-  static Color get surface => canvas;
-  static Color get raised => canvasSoft;
+  static Color get surface => canvasSoft;
+  static Color get raised => card;
   static Color get raised2 => field;
   static Color get line => hairline;
-  static Color get lineBright => isDark ? const Color(0xFF3B434D) : const Color(0xFFCCCCCC);
 
-  // Inks & Typography colors
-  static Color get primary => isDark ? _primaryDark : _primaryLight;
-  static Color get onPrimary => isDark ? _onPrimaryDark : _onPrimaryLight;
+  // Inks & Typography
+  static Color get primary => isDark ? const Color(0xFF00F5D4) : const Color(0xFF0284C7);
+  static Color get onPrimary => isDark ? const Color(0xFF090E17) : Colors.white;
   static Color get ink => isDark ? _inkDark : _inkLight;
   static Color get inkSoft => isDark ? _inkSoftDark : _inkSoftLight;
   static Color get textMuted => isDark ? _textMutedDark : _textMutedLight;
   static Color get textFaint => isDark ? _textFaintDark : _textFaintLight;
 
-  // Text aliases
   static Color get mist => textMuted;
   static Color get fog => textFaint;
-  static Color get dim => isDark ? const Color(0xFF30363D) : const Color(0xFFD4D4D4);
 
-  // Electric Blue Accent (vibrant across both light and dark)
-  static const Color accent = Color(0xFF0066FF);
+  // Live Active Accent: Electric Cyan / Teal
+  static const Color accent = Color(0xFF00F5D4);
+  static const Color accentCyan = Color(0xFF00E5FF);
+  static const Color accentGlow = Color(0x3300F5D4);
   static Color get signal => accent;
-  static const Color signalDim = Color(0xFF0052CC);
-  static const Color onSignal = Color(0xFFFFFFFF);
+  static const Color signalDim = Color(0xFF00A892);
+  static const Color onSignal = Color(0xFF090E17);
 
-  // Brand accent for highlights
-  static Color get saffron => accent;
+  // Brand highlight
+  static Color get saffron => const Color(0xFFFF9933);
+  static Color get indiaGreen => const Color(0xFF138808);
+  static Color get chakraNavy => isDark ? const Color(0xFF38BDF8) : const Color(0xFF000080);
 
-  // Geometry tokens from DESIGN-mobbin.md
-  static const double rSm = 16.0;
-  static const double rMd = 24.0;
+  // Official Indian National Tricolor Canvas Background Gradient
+  static LinearGradient get tricolorGradient => LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: isDark
+        ? const [
+            Color(0x1FFF9933), // ambient Saffron glow at top
+            Color(0xFF0A101E), // deep official navy body
+            Color(0xFF080D18), // deep canvas
+            Color(0x1F138808), // ambient India Green glow at bottom
+          ]
+        : const [
+            Color(0x18FF9933), // gentle Saffron tint
+            Color(0xFFF8FAFC), // crisp white body
+            Color(0xFFF1F5F9), // clean slate
+            Color(0x18138808), // gentle India Green tint
+          ],
+    stops: const [0.0, 0.24, 0.76, 1.0],
+  );
+
+  static LinearGradient get tricolorBarGradient => const LinearGradient(
+    colors: [
+      Color(0xFFFF9933),
+      Color(0xFFFFFFFF),
+      Color(0xFF138808),
+    ],
+    stops: [0.33, 0.66, 1.0],
+  );
+
+  // Corner Geometry tokens
+  static const double rSm = 12.0;
+  static const double rMd = 18.0;
+  static const double rLg = 24.0;
   static const double rFull = 9999.0;
 
-  // Alert severity scale (high-contrast, crystal-clear detection)
-  static const Color note = Color(0xFF0066FF); // Blue note
-  static const Color watch = Color(0xFFE69500); // Amber watch
-  static const Color elevated = Color(0xFFE65C00); // Orange alert
-  static const Color critical = Color(0xFFD92D20); // Crimson critical
+  // Non-cartoonish Alert Severity Scale:
+  // Note/Watch: Tactical Amber (#F59E0B)
+  // Alert/Elevated: Alert Orange (#F97316)
+  // Critical: Crimson Red (#EF4444)
+  static const Color note = Color(0xFF38BDF8); // Informational sky blue
+  static const Color watch = Color(0xFFF59E0B); // Amber watch
+  static const Color elevated = Color(0xFFF97316); // Orange alert
+  static const Color critical = Color(0xFFEF4444); // Crimson critical
 
   static Color severityColor(SeverityClass s) {
     switch (s) {
@@ -106,16 +138,31 @@ class Dp {
   }
 
   static Color severitySoft(SeverityClass s) =>
-      severityColor(s).withValues(alpha: isDark ? 0.20 : 0.12);
+      severityColor(s).withValues(alpha: isDark ? 0.22 : 0.14);
 
-  static Color get vehicleColor => isDark ? const Color(0xFFF0F6FC) : const Color(0xFF141414);
+  static Color get vehicleColor => isDark ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B);
 
-  // Heat layer ramp
-  static const Color heatLow = Color(0x000066FF);
-  static const Color heatHigh = Color(0xE6D92D20);
+  // Heat map ramp
+  static const Color heatLow = Color(0x0000F5D4);
+  static const Color heatMid = Color(0x88F59E0B);
+  static const Color heatHigh = Color(0xE6EF4444);
 }
 
-/// Severity tier shared across models and the alert UI.
+/// Official Government of India & National Heritage color constants
+class GovColors {
+  GovColors._();
+
+  static const Color saffron = Color(0xFFFF9933);
+  static const Color white = Color(0xFFFFFFFF);
+  static const Color green = Color(0xFF138808);
+  static const Color chakraNavy = Color(0xFF000080);
+  static const Color chakraSky = Color(0xFF0284C7);
+
+  static Color get saffronSoft => saffron.withValues(alpha: Dp.isDark ? 0.18 : 0.12);
+  static Color get greenSoft => green.withValues(alpha: Dp.isDark ? 0.18 : 0.12);
+}
+
+/// Severity tier shared across models and alert UI.
 enum SeverityClass { note, watch, elevated, critical }
 
 extension SeverityX on SeverityClass {
@@ -135,18 +182,18 @@ extension SeverityX on SeverityClass {
   String get label {
     switch (this) {
       case SeverityClass.note:
-        return 'Note';
+        return 'Informational';
       case SeverityClass.watch:
-        return 'Watch';
+        return 'Watch (Minor)';
       case SeverityClass.elevated:
-        return 'Alert';
+        return 'Elevated Risk';
       case SeverityClass.critical:
-        return 'Critical';
+        return 'Critical Defect';
     }
   }
 }
 
-/// A tiny stochastic color picker used to seed scene/render variation.
+/// Stochastic generator used for deterministic seed generation.
 final class Rand {
   Rand(this.seed);
   int seed;

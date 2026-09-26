@@ -33,6 +33,8 @@ enum DGlyph {
   moon,
   settings,
   sliders,
+  play,
+  pause,
 }
 
 /// Renders a [DGlyph] as a crisp stroked glyph.
@@ -310,6 +312,18 @@ class _DrishtiGlyphPainter extends CustomPainter {
         circle(const Offset(0.18, 0.36), 0.10);
         circle(const Offset(0.50, 0.64), 0.10);
         circle(const Offset(0.82, 0.42), 0.10);
+        break;
+      case DGlyph.play:
+        poly(const [
+          Offset(0.28, 0.20),
+          Offset(0.80, 0.50),
+          Offset(0.28, 0.80),
+          Offset(0.28, 0.20),
+        ]);
+        break;
+      case DGlyph.pause:
+        line(const Offset(0.36, 0.20), const Offset(0.36, 0.80));
+        line(const Offset(0.64, 0.20), const Offset(0.64, 0.80));
         break;
     }
   }

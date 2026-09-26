@@ -1,7 +1,7 @@
 name: drishti_transit
 description: "Drishti — an AI edge-detection network that turns city buses into live urban intelligence. National hackathon prototype."
 publish_to: 'none'
-version: 1.0.3+3
+version: 1.0.4+4
 
 environment:
   sdk: ^3.8.0
@@ -16,6 +16,7 @@ dependencies:
   flutter_map: ^8.3.2
   latlong2: ^0.10.1
   fl_chart: ^1.2.0
+  video_player: ^2.14.0
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +29,8 @@ flutter:
 
   assets:
     - assets/images/dristhi.jpeg
+    - assets/videos/traffic.mp4
+    - assets/videos/transit_road_potholes.mp4
 
   fonts:
     - family: Fraunces
