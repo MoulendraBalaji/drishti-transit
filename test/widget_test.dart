@@ -11,7 +11,16 @@ void main() {
     final center = CommandCenter(simulate: false);
     await tester.pumpWidget(FieldCrewApp(center: center));
     await tester.pump();
+
+    // The opening sequence owns the screen until it reports in.
+    expect(find.text('TAP TO CONTINUE'), findsOneWidget);
+    expect(find.byKey(const ValueKey('dock_tab_MY ROUTE')), findsOneWidget);
+
+    // Let the cold-start choreography resolve, then lift the curtain.
+    await tester.pump(const Duration(milliseconds: 1700));
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('TAP TO CONTINUE'), findsNothing);
 
     // Verify Mobile Field Operation tabs exist in dock
     expect(find.byKey(const ValueKey('dock_tab_MY ROUTE')), findsOneWidget);
@@ -39,6 +48,88 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(milliseconds: 100));
   });
+
+  testWidgets('Mobile: a tap skips the opening sequence', (tester) async {
+    final center = CommandCenter(simulate: false);
+    await tester.pumpWidget(FieldCrewApp(center: center));
+    await tester.pump();
+    expect(find.text('TAP TO CONTINUE'), findsOneWidget);
+
+    await tester.tapAt(const Offset(400, 300));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('TAP TO CONTINUE'), findsNothing);
+    expect(find.byKey(const ValueKey('dock_tab_MY WORK')), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 100));
+  });
+
+  testWidgets('Mobile: settings screen lays out on a phone viewport', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final center = CommandCenter(simulate: false);
+    await tester.pumpWidget(FieldCrewApp(center: center));
+    await tester.pump();
+    await tester.tapAt(const Offset(195, 400)); // skip the opening sequence
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.tap(find.byKey(const ValueKey('topbar_settings')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+
+    expect(find.text('Field Settings'), findsOneWidget);
+    expect(find.text('Proximity radar radius'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 100));
+  });
+
+  for (final size in const [Size(360, 640), Size(430, 932)]) {
+    for (final dark in [false, true]) {
+      testWidgets('Mobile: ${size.width.toInt()}x${size.height.toInt()} '
+          '${dark ? 'night patrol' : 'outdoor light'} lays out every screen', (tester) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
+
+        final center = CommandCenter(simulate: false)
+          ..setThemeMode(dark ? ThemeMode.dark : ThemeMode.light);
+        await tester.pumpWidget(FieldCrewApp(center: center));
+        await tester.pump();
+        await tester.tapAt(Offset(size.width / 2, size.height / 2));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 700));
+
+        for (final tab in const ['MY ROUTE', 'VERIFY & FIX', 'MY WORK']) {
+          await tester.tap(find.byKey(ValueKey('dock_tab_$tab')));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 700));
+          expect(tester.takeException(), isNull, reason: '$tab overflowed or threw');
+        }
+
+        await tester.tap(find.byKey(const ValueKey('topbar_settings')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 700));
+        expect(tester.takeException(), isNull, reason: 'settings overflowed or threw');
+        await tester.dragUntilVisible(
+          find.text('End shift & sign out'),
+          find.byType(ListView),
+          const Offset(0, -120),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(tester.takeException(), isNull, reason: 'settings footer overflowed');
+
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump(const Duration(milliseconds: 100));
+      });
+    }
+  }
 
   testWidgets('Web: boots into CommandRoomApp with workspaces and collapsible sidebar', (tester) async {
     // Set desktop screen size >= 900

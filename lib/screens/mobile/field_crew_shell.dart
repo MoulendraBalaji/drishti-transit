@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/motion.dart';
 import '../../app/palette.dart';
-import '../../app/typography.dart';
 import '../../core/command_center.dart';
 import '../../core/models.dart';
-import '../../ui/dock.dart';
 import '../../ui/glyphs.dart';
 import '../../ui/gov_masthead.dart';
-import '../../ui/tactile.dart';
-import 'field_crew_settings_screen.dart';
+import '../../ui/mobile/mobile_nav.dart';
+import '../../ui/mobile/mobile_surfaces.dart';
+import '../../ui/mobile/mobile_tokens.dart';
+import 'field_crew_boot_screen.dart';
 import 'mobile_field_screens.dart';
 
 /// FieldCrewShell — Top-level navigation shell for the Field Crew Mobile App.
@@ -23,33 +24,70 @@ import 'mobile_field_screens.dart';
 /// 3. My Work
 /// 4. Field Settings (route/zone reassignment, notification prefs, offline queue, account/logout)
 ///
-/// Completely separate from any central command interfaces.
+/// Opening choreography: the boot sequence plays over an opaque curtain, then
+/// the curtain lifts while the app bar, page body, and dock settle in on a
+/// single staggered timeline ([Mo.easeOutTech]) — so the terminal never simply
+/// "appears".
 class FieldCrewShell extends StatefulWidget {
   const FieldCrewShell({super.key});
+
+  /// Route path served by [FieldCrewRouter] for field settings.
+  static const String settingsPath = '/settings';
 
   @override
   State<FieldCrewShell> createState() => _FieldCrewShellState();
 }
 
-class _FieldCrewShellState extends State<FieldCrewShell> with SingleTickerProviderStateMixin {
+class _FieldCrewShellState extends State<FieldCrewShell>
+    with TickerProviderStateMixin {
   static const _tabs = [
-    DockTab(DGlyph.route, 'MY ROUTE'),
-    DockTab(DGlyph.wrench, 'VERIFY & FIX'),
-    DockTab(DGlyph.clipboard, 'MY WORK'),
+    MDockTab(DGlyph.route, 'MY ROUTE'),
+    MDockTab(DGlyph.wrench, 'VERIFY & FIX'),
+    MDockTab(DGlyph.clipboard, 'MY WORK'),
   ];
 
   int _currentIndex = 0;
   DetectionEvent? _selectedVerifyEvent;
 
-  late final AnimationController _entrance = AnimationController(
+  // Opening timeline: one controller, three staggered regions.
+  late final AnimationController _open = AnimationController(
     vsync: this,
-    duration: Mo.scene,
-  )..forward();
+    duration: const Duration(milliseconds: 820),
+  );
+
+  late final Animation<double> _barIn = CurvedAnimation(
+    parent: _open,
+    curve: const Interval(0.00, 0.52, curve: Mo.easeOutTech),
+  );
+  late final Animation<double> _bodyIn = CurvedAnimation(
+    parent: _open,
+    curve: const Interval(0.14, 0.86, curve: Mo.easeOutTech),
+  );
+  late final Animation<double> _dockIn = CurvedAnimation(
+    parent: _open,
+    curve: const Interval(0.34, 1.00, curve: Mo.easeOutTech),
+  );
+
+  // Boot curtain.
+  bool _booting = true;
+
+  late final AnimationController _curtain = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 460),
+  );
 
   @override
   void dispose() {
-    _entrance.dispose();
+    _open.dispose();
+    _curtain.dispose();
     super.dispose();
+  }
+
+  void _onBootComplete() {
+    if (!mounted) return;
+    setState(() => _booting = false);
+    _curtain.forward();
+    _open.forward();
   }
 
   void _onSwitchToVerify(DetectionEvent event) {
@@ -62,7 +100,7 @@ class _FieldCrewShellState extends State<FieldCrewShell> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final cc = context.watch<CommandCenter>();
-    final hasUrgent = cc.mobileRouteIncidents.any(
+    final urgent = cc.mobileRouteIncidents.any(
       (e) => e.status == IncidentStatus.assigned || e.status == IncidentStatus.newAlert,
     );
 
@@ -72,186 +110,139 @@ class _FieldCrewShellState extends State<FieldCrewShell> with SingleTickerProvid
       _ => const MobileLogScreen(),
     };
 
+    final dockClearance = MDockBar.height + MDockBar.bottomInset(context);
+
     return Scaffold(
       backgroundColor: Dp.canvas,
       body: GovCanvas(
-        child: FadeTransition(
-          opacity: CurvedAnimation(parent: _entrance, curve: Mo.easeTech),
-          child: SafeArea(
-            bottom: false,
-            child: Column(
-              children: [
-                // Clean Municipal Field Top App Bar (reclaims space previously occupied by demo toggle)
-                _buildFieldCrewAppBar(context, cc),
-                const GovTricolorBar(height: 2.0),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: TabMotion(index: _currentIndex, child: activePage),
-                      ),
-                      // Floating Tactical Mobile Dock
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: DrishtiDock(
-                          tabs: _tabs,
-                          index: _currentIndex,
-                          onSelect: (i) => setState(() => _currentIndex = i),
-                          badge: hasUrgent,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Simple, purpose-built mobile app bar showing route name, connection status, and settings button.
-  Widget _buildFieldCrewAppBar(BuildContext context, CommandCenter cc) {
-    final isDark = Dp.isDark;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF090E17) : Colors.white,
-        border: Border(bottom: BorderSide(color: Dp.hairline, width: 1.0)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF142036) : const Color(0xFFE2E8F0),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFF9933), width: 1.2),
-            ),
-            child: Image.asset(
-              'assets/images/dristhi.jpeg',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const Center(
-                child: AshokaChakra(size: 16, color: Dp.accent),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'DRISHTI FIELD OPERATIONS',
-                  style: monoTxt(8.5, color: const Color(0xFFFF9933), w: FontWeight.w800, ls: 0.8),
-                ),
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        cc.mobileAssignedRoute.toUpperCase(),
-                        style: AppText.label.copyWith(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12.5,
-                          letterSpacing: 0.4,
-                          color: Dp.ink,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: Dp.accent.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'UNIT 04',
-                        style: monoTxt(8, color: Dp.accent, w: FontWeight.w800),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Connection status badge (tactile tap toggles offline simulation)
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              cc.toggleFieldOffline();
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: cc.isFieldOffline
-                    ? const Color(0xFFDC2626).withValues(alpha: 0.15)
-                    : const Color(0xFF138808).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(Dp.rFull),
-                border: Border.all(
-                  color: cc.isFieldOffline ? const Color(0xFFDC2626) : const Color(0xFF138808),
-                  width: 1.0,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+        child: Stack(
+          children: [
+            SafeArea(
+              bottom: false,
+              child: Column(
                 children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: cc.isFieldOffline ? const Color(0xFFDC2626) : const Color(0xFF138808),
-                      shape: BoxShape.circle,
+                  MReveal(
+                    animation: _barIn,
+                    offset: const Offset(0, -0.55),
+                    child: MTopBar(
+                      cc: cc,
+                      onOpenSettings: () {
+                        HapticFeedback.selectionClick();
+                        context.push(FieldCrewShell.settingsPath);
+                      },
                     ),
                   ),
-                  const SizedBox(width: 5),
-                  Text(
-                    cc.isFieldOffline ? 'OFFLINE' : 'ONLINE',
-                    style: monoTxt(
-                      8.5,
-                      color: cc.isFieldOffline ? const Color(0xFFDC2626) : const Color(0xFF138808),
-                      w: FontWeight.w800,
+                  const GovTricolorBar(height: 2.5),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: MReveal(
+                            animation: _bodyIn,
+                            offset: const Offset(0, 0.05),
+                            scaleFrom: 0.995,
+                            child: AnimatedSwitcher(
+                              duration: Mo.standard,
+                              switchInCurve: Mo.easeOutTech,
+                              switchOutCurve: Mo.easeInTech,
+                              transitionBuilder: (child, anim) {
+                                final dx = _currentIndex > 0 ? 1.0 : -1.0;
+                                return FadeTransition(
+                                  opacity: anim,
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: Offset(0.04 * dx, 0),
+                                      end: Offset.zero,
+                                    ).animate(anim),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: KeyedSubtree(
+                                key: ValueKey<int>(_currentIndex),
+                                child: activePage,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // The single always-available field action, docked above the bar.
+                        Positioned(
+                          right: MSp.gutter,
+                          bottom: dockClearance + 14,
+                          child: IgnorePointer(
+                            ignoring: _currentIndex != 0,
+                            child: AnimatedSlide(
+                              duration: Mo.standard,
+                              curve: Mo.easeTech,
+                              offset: _currentIndex == 0
+                                  ? Offset.zero
+                                  : const Offset(0, 0.6),
+                              child: AnimatedOpacity(
+                                duration: Mo.standard,
+                                curve: Mo.easeTech,
+                                opacity: _currentIndex == 0 ? 1.0 : 0.0,
+                                child: MFab(
+                                  label: 'FLAG DEFECT',
+                                  icon: DGlyph.shield,
+                                  accent: MSig.saffron,
+                                  onTap: () => _openManualFlag(context, cc),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: MReveal(
+                            animation: _dockIn,
+                            offset: const Offset(0, 0.55),
+                            child: MDockBar(
+                              tabs: _tabs,
+                              index: _currentIndex,
+                              badgeIndex: urgent ? 1 : null,
+                              onSelect: (i) => setState(() => _currentIndex = i),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          // Settings Gear Button leading to real Field Settings
-          Tactile(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const FieldCrewSettingsScreen(),
+
+            if (_booting)
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: false,
+                  child: AnimatedBuilder(
+                    animation: _curtain,
+                    builder: (context, child) => Opacity(
+                      opacity: 1.0 - _curtain.value,
+                      child: Transform.scale(
+                        scale: 1.0 + 0.06 * _curtain.value,
+                        child: child,
+                      ),
+                    ),
+                    child: FieldCrewBoot(onComplete: _onBootComplete),
+                  ),
                 ),
-              );
-            },
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: Dp.canvasSoft,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Dp.hairline),
               ),
-              child: Center(
-                child: Drishti.icon(DGlyph.sliders, size: 15, color: Dp.ink),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+
+  void _openManualFlag(BuildContext context, CommandCenter cc) {
+    HapticFeedback.mediumImpact();
+    showFieldSheet<void>(
+      context: context,
+      builder: (_) => ManualFlagSheet(cc: cc),
     );
   }
 }
