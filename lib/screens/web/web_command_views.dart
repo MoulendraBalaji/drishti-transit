@@ -273,14 +273,14 @@ class _WebCityMapViewState extends State<WebCityMapView> {
           if (e.assignedCrew != null) ...[
             const SizedBox(height: 6),
             Text(
-              'Assigned Crew: ${e.assignedCrew}',
+              'Assigned Unit: ${e.assignedCrew}',
               style: monoTxt(9.5, color: const Color(0xFF38BDF8), w: FontWeight.w700),
             ),
           ],
           if (e.verifyVerdict != null) ...[
             const SizedBox(height: 2),
             Text(
-              'Field Verdict: ${e.verifyVerdict}',
+              'Inspection Verdict: ${e.verifyVerdict}',
               style: monoTxt(9, color: const Color(0xFFA855F7), w: FontWeight.w600),
             ),
           ],
@@ -362,7 +362,7 @@ class _WebDispatchViewState extends State<WebDispatchView> {
                         ),
                       ),
                       Text(
-                        'Web Operator: Assign road defects to municipal field crews. On-site physical verification & repair is executed via the Mobile Field App.',
+                        'Command Center: Assign road defects to municipal maintenance units. Track live repair milestones across transit corridors.',
                         style: monoTxt(9.5, color: Dp.textMuted),
                       ),
                     ],
@@ -382,7 +382,7 @@ class _WebDispatchViewState extends State<WebDispatchView> {
                     title: '1. NEW ALERTS',
                     count: '$newCount',
                     color: const Color(0xFFFF9933),
-                    subtitle: 'Awaiting Crew Dispatch',
+                    subtitle: 'Awaiting Unit Dispatch',
                     selected: _filterStatus == IncidentStatus.newAlert,
                     onTap: () => setState(() => _filterStatus = _filterStatus == IncidentStatus.newAlert ? null : IncidentStatus.newAlert),
                   ),
@@ -393,7 +393,7 @@ class _WebDispatchViewState extends State<WebDispatchView> {
                     title: '2. ASSIGNED',
                     count: '$assignedCount',
                     color: const Color(0xFF38BDF8),
-                    subtitle: 'Dispatched to Crew',
+                    subtitle: 'Dispatched to Unit',
                     selected: _filterStatus == IncidentStatus.assigned,
                     onTap: () => setState(() => _filterStatus = _filterStatus == IncidentStatus.assigned ? null : IncidentStatus.assigned),
                   ),
@@ -401,7 +401,7 @@ class _WebDispatchViewState extends State<WebDispatchView> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildPipelineCard(
-                    title: '3. FIELD-VERIFIED',
+                    title: '3. ON-SITE VERIFIED',
                     count: '$verifiedCount',
                     color: const Color(0xFFA855F7),
                     subtitle: 'Inspected on Ground',
@@ -415,7 +415,7 @@ class _WebDispatchViewState extends State<WebDispatchView> {
                     title: '4. RESOLVED',
                     count: '$resolvedCount',
                     color: const Color(0xFF10B981),
-                    subtitle: 'Repaired by Mobile Crew',
+                    subtitle: 'Repaired & Closed',
                     selected: _filterStatus == IncidentStatus.resolved,
                     onTap: () => setState(() => _filterStatus = _filterStatus == IncidentStatus.resolved ? null : IncidentStatus.resolved),
                   ),
@@ -511,7 +511,7 @@ class _WebDispatchViewState extends State<WebDispatchView> {
                         SizedBox(width: 110, child: Text('CORRIDOR', style: monoTxt(9, color: Dp.textMuted, w: FontWeight.w800))),
                         SizedBox(width: 100, child: Text('CONFIDENCE', style: monoTxt(9, color: Dp.textMuted, w: FontWeight.w800))),
                         SizedBox(width: 120, child: Text('STATUS', style: monoTxt(9, color: Dp.textMuted, w: FontWeight.w800))),
-                        Expanded(child: Text('ASSIGNED CREW / AUDIT', style: monoTxt(9, color: Dp.textMuted, w: FontWeight.w800))),
+                        Expanded(child: Text('ASSIGNED UNIT / AUDIT', style: monoTxt(9, color: Dp.textMuted, w: FontWeight.w800))),
                         SizedBox(width: 150, child: Text('ACTION (WEB ONLY)', style: monoTxt(9, color: Dp.textMuted, w: FontWeight.w800), textAlign: TextAlign.right)),
                       ],
                     ),
@@ -667,7 +667,7 @@ class _WebDispatchViewState extends State<WebDispatchView> {
               ),
             ),
           ),
-          // Assigned Crew
+          // Assigned Unit
           Expanded(
             child: Text(
               e.assignedCrew != null
@@ -692,7 +692,7 @@ class _WebDispatchViewState extends State<WebDispatchView> {
                       ],
                     )
                   : TactileButton(
-                      label: e.assignedCrew != null ? 'REASSIGN' : 'ASSIGN CREW',
+                      label: e.assignedCrew != null ? 'REASSIGN' : 'ASSIGN UNIT',
                       icon: DGlyph.target,
                       accent: e.assignedCrew != null ? const Color(0xFF38BDF8) : const Color(0xFFFF9933),
                       dense: true,
@@ -723,13 +723,13 @@ class _AssignModal extends StatefulWidget {
 }
 
 class _AssignModalState extends State<_AssignModal> {
-  String _selectedCrew = 'Field Crew 04 (Karve Rd - Fast Response)';
+  String _selectedCrew = 'Maintenance Unit 04 (Karve Rd - Fast Response)';
   String _priority = 'CRITICAL (SLA < 4H)';
   final TextEditingController _notesCtrl = TextEditingController(text: 'Urgent asphalt defect requiring cold-mix patch');
 
   final List<String> _crews = const [
-    'Field Crew 04 (Karve Rd - Fast Response)',
-    'Field Crew 12 (Shivajinagar Corridor)',
+    'Maintenance Unit 04 (Karve Rd - Fast Response)',
+    'Maintenance Unit 12 (Shivajinagar Corridor)',
     'PWD Roads Infra Alpha (Heavy Repairs)',
     'PMPML Rapid Transit Unit',
     'PMC Encroachment Clearance Wing',
@@ -761,7 +761,7 @@ class _AssignModalState extends State<_AssignModal> {
                 Drishti.icon(DGlyph.target, size: 18, color: const Color(0xFFFF9933)),
                 const SizedBox(width: 8),
                 Text(
-                  'DISPATCH WORK ORDER TO CREW',
+                  'DISPATCH WORK ORDER TO UNIT',
                   style: monoTxt(12, color: Dp.ink, w: FontWeight.w800, ls: 0.6),
                 ),
                 const Spacer(),
@@ -791,7 +791,7 @@ class _AssignModalState extends State<_AssignModal> {
               ),
             ),
             const SizedBox(height: 14),
-            Text('ASSIGN TO MAINTENANCE CREW / DEPARTMENT', style: monoTxt(9, color: Dp.textMuted, w: FontWeight.w700)),
+            Text('ASSIGN TO MAINTENANCE UNIT / DEPARTMENT', style: monoTxt(9, color: Dp.textMuted, w: FontWeight.w700)),
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -876,7 +876,7 @@ class _AssignModalState extends State<_AssignModal> {
                         SnackBar(
                           backgroundColor: const Color(0xFF0284C7),
                           content: Text(
-                            'Incident #${widget.event.id} dispatched to $_selectedCrew. Visible instantly in Field Operations App!',
+                            'Incident #${widget.event.id} dispatched to $_selectedCrew. Municipal work order generated.',
                             style: monoTxt(10, color: Colors.white, w: FontWeight.w700),
                           ),
                         ),
@@ -1749,7 +1749,7 @@ class _WebConfigViewState extends State<WebConfigView> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('AUTOMATED AIS-140 DISPATCH RULE', style: monoTxt(10, color: Dp.ink, w: FontWeight.w800)),
-                              Text('Auto-assign Critical severity defects to nearest corridor crew.', style: monoTxt(8.5, color: Dp.textMuted)),
+                              Text('Auto-assign Critical severity defects to nearest corridor maintenance unit.', style: monoTxt(8.5, color: Dp.textMuted)),
                             ],
                           ),
                         ),

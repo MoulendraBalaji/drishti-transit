@@ -1,14 +1,15 @@
-import 'package:drishti_transit/app/app.dart';
+import 'package:drishti_transit/app/command_room_app.dart';
+import 'package:drishti_transit/app/field_crew_app.dart';
 import 'package:drishti_transit/core/command_center.dart';
 import 'package:drishti_transit/core/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('Mobile: boots into Field Operations App with Route, Verify, and Work Log tabs', (tester) async {
+  testWidgets('Mobile: boots into FieldCrewApp with Route, Verify, and Work Log tabs', (tester) async {
     // Default test window is 800x600 (mobile width < 900)
     final center = CommandCenter(simulate: false);
-    await tester.pumpWidget(DrishtiApp(center: center));
+    await tester.pumpWidget(FieldCrewApp(center: center));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -39,18 +40,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
   });
 
-  testWidgets('Web: boots into Command & Control Dashboard with 5 workspaces and collapsible sidebar', (tester) async {
+  testWidgets('Web: boots into CommandRoomApp with workspaces and collapsible sidebar', (tester) async {
     // Set desktop screen size >= 900
     tester.view.physicalSize = const Size(1280, 800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() => tester.view.resetPhysicalSize());
 
     final center = CommandCenter(simulate: false);
-    await tester.pumpWidget(DrishtiApp(center: center));
+    await tester.pumpWidget(CommandRoomApp(center: center));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
-    // Verify 5 Web Workspaces
+    // Verify Web Workspaces
     expect(find.text('FLEET MAP'), findsWidgets);
     expect(find.text('ASSIGN & DISPATCH'), findsWidgets);
     expect(find.text('FLEET ANALYTICS'), findsWidgets);
@@ -99,11 +100,11 @@ void main() {
     final center = CommandCenter(simulate: false);
     final targetId = center.incidents.first.id;
 
-    // Web assigns alert to Field Crew 04
-    center.assignIncident(targetId, 'Field Crew 04');
+    // Web assigns alert to Maintenance Unit 04
+    center.assignIncident(targetId, 'Maintenance Unit 04');
     final assignedEvent = center.byId(targetId);
     expect(assignedEvent?.status, IncidentStatus.assigned);
-    expect(assignedEvent?.assignedCrew, 'Field Crew 04');
+    expect(assignedEvent?.assignedCrew, 'Maintenance Unit 04');
 
     // Mobile field crew verifies alert on-site
     center.verifyIncident(targetId, confirmed: true);
