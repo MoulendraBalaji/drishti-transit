@@ -2,10 +2,82 @@ import 'package:drishti_transit/app/command_room_app.dart';
 import 'package:drishti_transit/app/field_crew_app.dart';
 import 'package:drishti_transit/core/command_center.dart';
 import 'package:drishti_transit/core/models.dart';
+import 'package:drishti_transit/ui/glyphs.dart';
+import 'package:drishti_transit/ui/mobile/mobile_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Minimal host for [MDockBar] so the slider can be driven through tab switches.
+class _DockHarness extends StatefulWidget {
+  const _DockHarness();
+
+  @override
+  State<_DockHarness> createState() => _DockHarnessState();
+}
+
+class _DockHarnessState extends State<_DockHarness> {
+  static const _tabs = [
+    MDockTab(DGlyph.route, 'ROUTE'),
+    MDockTab(DGlyph.wrench, 'FIX'),
+    MDockTab(DGlyph.clipboard, 'WORK'),
+  ];
+
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      child: Center(
+        child: MDockBar(
+          tabs: _tabs,
+          index: _index,
+          onSelect: (i) => setState(() => _index = i),
+        ),
+      ),
+    );
+  }
+}
+
 void main() {
+  testWidgets('Mobile: dock slider stays centred on the active tab', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: _DockHarness())),
+    );
+    await tester.pumpAndSettle();
+
+    final pill = find.byKey(const ValueKey('dock_pill'));
+    expect(pill, findsOneWidget);
+
+    final pillLefts = <double>[];
+
+    for (final (i, label) in const ['ROUTE', 'FIX', 'WORK'].indexed) {
+      final tab = find.byKey(ValueKey('dock_tab_$label'));
+
+      // ROUTE is active on mount; every other tab is reached by tapping it.
+      if (i > 0) {
+        await tester.tap(tab);
+        await tester.pumpAndSettle();
+      }
+
+      expect(tester.getRect(tab).center.dx,
+          closeTo(tester.getRect(pill).center.dx, 0.5),
+          reason: 'slider should sit under "$label"');
+
+      pillLefts.add(tester.getRect(pill).left);
+    }
+
+    // The slider must actually travel one slot width per tab change.
+    expect(pillLefts[1] - pillLefts[0], closeTo(362 / 3, 1.0));
+    expect(pillLefts[2] - pillLefts[1], closeTo(362 / 3, 1.0));
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 100));
+  });
+
   testWidgets('Mobile: boots into FieldCrewApp with Route, Verify, and Work Log tabs', (tester) async {
     // Default test window is 800x600 (mobile width < 900)
     final center = CommandCenter(simulate: false);

@@ -56,6 +56,7 @@ class MDockBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Dp.isDark;
     final maxW = MediaQuery.sizeOf(context).width;
+    final active = tabs.isEmpty ? 0 : index.clamp(0, tabs.length - 1);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(sidePad, 0, sidePad, bottomInset(context)),
@@ -89,22 +90,27 @@ class MDockBar extends StatelessWidget {
                   child: Stack(
                     children: [
                       // Sliding accent indicator behind the active destination.
-                      AnimatedPositioned(
-                        duration: Mo.standard,
-                        curve: Mo.easeTech,
-                        left: 0,
-                        right: 0,
-                        top: 0,
-                        bottom: 0,
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: 1 / tabs.length,
+                      //
+                      // The pill is one fixed-width slot wide and is *moved* to the
+                      // active slot: sizing it via widthFactor is what makes the
+                      // AnimatedAlign tween actually translate it. A bare
+                      // FractionallySizedBox with only an `alignment` would hand
+                      // its child tight constraints, so the pill would fill the
+                      // whole strip and never move.
+                      if (tabs.isNotEmpty)
+                        AnimatedAlign(
+                          duration: Mo.standard,
+                          curve: Mo.easeTech,
+                          alignment: Alignment(
+                            tabs.length > 1
+                                ? (active * 2 / (tabs.length - 1)) - 1
+                                : 0.0,
+                            0,
+                          ),
                           child: FractionallySizedBox(
-                            alignment: tabs.length > 1
-                                ? Alignment(
-                                    (index * 2 / (tabs.length - 1)) - 1, 0)
-                                : Alignment.center,
+                            widthFactor: 1 / tabs.length,
                             child: Container(
+                              key: const ValueKey('dock_pill'),
                               margin: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                 color: MSig.accentFill(Dp.isDark ? 0.13 : 0.10),
@@ -117,7 +123,6 @@ class MDockBar extends StatelessWidget {
                             ),
                           ),
                         ),
-                      ),
                       // Sovereign tricolor hairline across the top of the dock.
                       Positioned(
                         top: 0,

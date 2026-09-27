@@ -356,13 +356,18 @@ class RippleLayer extends StatefulWidget {
 
 class _RippleLayerState extends State<RippleLayer>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 900))
-    ..repeat();
+  AnimationController? _controller;
+
+  /// Created on first use: with no ripples the layer never needs a ticker, and
+  /// touching it in [dispose] would build a controller on a dead element.
+  AnimationController get _c => _controller ??= AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 900),
+      )..repeat();
 
   @override
   void dispose() {
-    _c.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
